@@ -28,11 +28,8 @@ namespace PersistentQueue.Tests
             using var queue = new UnitTestPersistentQueue();
 
             // Act
-            for (int i = 0; i < 5; i++)
-            {
-                var s = Encoding.UTF8.GetBytes($"Message {i}");
-                queue.Enqueue(s);
-            }
+            for (var i = 0; i < 5; i++) 
+                queue.Enqueue(1);
 
             Stream outStream;
             var count = 0;

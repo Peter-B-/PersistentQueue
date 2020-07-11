@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace PersistentQueue
 {
@@ -249,6 +252,11 @@ namespace PersistentQueue
 
                 return memoryStream;
             }
+        }
+
+        public Task<IDequeueResult> DequeueAsync(int maxElements)
+        {
+            return Task.FromResult(new DequeueResult(new List<Memory<byte>>()) as IDequeueResult);
         }
 
         protected virtual void Dispose(bool disposing)
