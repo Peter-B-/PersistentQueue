@@ -12,7 +12,6 @@ namespace PersistentQueue
 {
     public class PersistentQueue : IDisposable
     {
-        bool disposed = false;
         // Folders
         readonly string QueuePath;
         static readonly string MetaPageFolder = "meta";
@@ -244,34 +243,20 @@ namespace PersistentQueue
             }
         }
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _metaPageFactory?.Dispose();
+                _indexPageFactory?.Dispose();
+                _dataPageFactory?.Dispose();
+            }
+        }
+
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
-        }
-
-        protected void Dispose(bool disposing)
-        {
-            if (disposed)
-                return;
-
-            if (disposing)
-            {
-                if (_metaPageFactory != null)
-                    _metaPageFactory.Dispose();
-
-                if (_indexPageFactory != null)
-                    _indexPageFactory.Dispose();
-
-                if (_dataPageFactory != null)
-                    _dataPageFactory.Dispose();
-            }
-            disposed = true;
-        }
-
-        ~PersistentQueue()
-        {
-            Dispose(false);
         }
     }
 }
