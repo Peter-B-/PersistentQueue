@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using PersistentQueue.Utils;
 
 namespace PersistentQueue
 {
@@ -18,6 +19,8 @@ namespace PersistentQueue
         private static readonly long MinimumDataPageSize = 32 * 1024 * 1024;
 
         private readonly object _lockObject = new object();
+
+        private readonly QueueStateMonitor _queueMonitor;
 
         // Data pages
         private readonly long DataPageSize;
@@ -57,6 +60,8 @@ namespace PersistentQueue
             IndexPageSize = IndexItemSize * IndexItemsPerPage;
 
             Init();
+            
+            _queueMonitor = QueueStateMonitor.Initialize(_metaData.TailIndex);
         }
 
         public void Dispose()
@@ -201,6 +206,8 @@ namespace PersistentQueue
                     _metaData.TailIndex = 0;
                 else
                     _metaData.TailIndex++;
+                
+                _queueMonitor.Update(_metaData.TailIndex);
                 PersistMetaData();
             }
         }
@@ -256,27 +263,25 @@ namespace PersistentQueue
 
         public async Task<IDequeueResult> DequeueAsync(int maxElements)
         {
-            lock (_lockObject)
-            {
-                var headIndex = _metaData.HeadIndex;
-                
-                var availableElements = _metaData.TailIndex - headIndex;
-                var noOfItems = (int)Math.Min(availableElements, maxElements);
-                if (noOfItems == 0)
-                    throw new NotImplementedException();
+            var queueState = _queueMonitor.GetCurrent();
+
+            var headIndex = _metaData.HeadIndex;
+            
+            while (headIndex == queueState.TailIndex) 
+                queueState = await queueState.NextUpdate.ConfigureAwait(false);
+
+            var availableElements = queueState.TailIndex - headIndex;
+            var noOfItems = (int) Math.Min(availableElements, maxElements);
+
+            var data =
+                Enumerable.Range(0, noOfItems)
+                    .Select(offset => headIndex + offset)
+                    .Select(ReadItem)
+                    .ToList();
 
 
-                var data =
-                    Enumerable.Range(0, noOfItems)
-                        .Select(offset => headIndex + offset)
-                        .Select(ReadItem)
-                        .ToList();
-                
-
-                var result = new DequeueResult(data, new ItemRange(headIndex, noOfItems), CommitBatch, RejectBatch);
-                return result;
-            }
-
+            var result = new DequeueResult(data, new ItemRange(headIndex, noOfItems), CommitBatch, RejectBatch);
+            return result;
         }
 
         private void RejectBatch(ItemRange range)
@@ -287,14 +292,14 @@ namespace PersistentQueue
         {
             var newHeadIndex = range.HeadIndex + range.ItemCount;
             long oldHeadIndex;
-            
+
             lock (_lockObject)
             {
                 // Update meta data
                 oldHeadIndex = _metaData.HeadIndex;
                 if (newHeadIndex > oldHeadIndex)
                     _metaData.HeadIndex = newHeadIndex;
-                
+
                 PersistMetaData();
             }
 
