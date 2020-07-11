@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Runtime.InteropServices;
-using System.IO;
+﻿using System.IO;
 
 namespace PersistentQueue
 {
@@ -37,6 +31,7 @@ namespace PersistentQueue
                     ItemLength = br.ReadInt64()
                 };
             }
+
             return ret;
         }
 
@@ -44,6 +39,5 @@ namespace PersistentQueue
         {
             return 3 * sizeof(long);
         }
-
     }
 }

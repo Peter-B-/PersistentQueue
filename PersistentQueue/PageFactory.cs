@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 using PersistentQueue.Cache;
 
@@ -10,12 +6,12 @@ namespace PersistentQueue
 {
     internal class PageFactory : IPageFactory
     {
-        bool disposed = false;
-        static readonly string PageFileName = "page";
-        static readonly string PageFileSuffix = ".dat";
-        readonly long PageSize;
-        readonly string PageDir;
-        Cache<long, IPage> _pageCache;
+        private static readonly string PageFileName = "page";
+        private static readonly string PageFileSuffix = ".dat";
+        private readonly string PageDir;
+        private readonly long PageSize;
+        private readonly Cache<long, IPage> _pageCache;
+        private bool disposed;
 
         public PageFactory(long pageSize, string pageDirectory)
         {
@@ -29,11 +25,6 @@ namespace PersistentQueue
             _pageCache = new Cache<long, IPage>(10000);
         }
 
-        string GetFilePath(long index)
-        {
-            return Path.Combine(PageDir, String.Format("{0}-{1}{2}", PageFileName, index, PageFileSuffix));
-        }
-
         public IPage GetPage(long index)
         {
             IPage page;
@@ -42,7 +33,7 @@ namespace PersistentQueue
             {
                 page = _pageCache[index] = new Page(GetFilePath(index), PageSize, index);
             }
-            
+
             return page;
         }
 
@@ -54,7 +45,7 @@ namespace PersistentQueue
         public void DeletePage(long index)
         {
             IPage page;
-            
+
             // Lookup page in _pageCache.
             if (_pageCache.TryGetValue(index, out page))
             {
@@ -75,6 +66,11 @@ namespace PersistentQueue
             GC.SuppressFinalize(this);
         }
 
+        private string GetFilePath(long index)
+        {
+            return Path.Combine(PageDir, string.Format("{0}-{1}{2}", PageFileName, index, PageFileSuffix));
+        }
+
         protected void Dispose(bool disposing)
         {
             if (disposed)
@@ -85,6 +81,7 @@ namespace PersistentQueue
                 if (_pageCache != null)
                     _pageCache.RemoveAll();
             }
+
             disposed = true;
         }
 

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Runtime.InteropServices;
-using System.IO;
+﻿using System.IO;
 
 namespace PersistentQueue
 {
@@ -27,12 +21,13 @@ namespace PersistentQueue
             MetaData ret = null;
             using (var br = new BinaryReader(s))
             {
-                ret = new MetaData 
+                ret = new MetaData
                 {
                     HeadIndex = br.ReadInt64(),
                     TailIndex = br.ReadInt64()
                 };
             }
+
             return ret;
         }
 

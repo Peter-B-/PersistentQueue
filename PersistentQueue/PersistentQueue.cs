@@ -1,51 +1,48 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
-using System.Runtime.InteropServices;
-using System.Runtime.Serialization.Formatters.Binary;
 
 namespace PersistentQueue
 {
     public class PersistentQueue : IDisposable
     {
-        // Folders
-        readonly string QueuePath;
-        static readonly string MetaPageFolder = "meta";
-        static readonly string IndexPageFolder = "index";
-        static readonly string DataPageFolder = "data";
-
-        // MetaData
-        MetaData _metaData;
-        readonly long MetaDataItemSize;
-        IPageFactory _metaPageFactory;
-
-        // Tail info
-        long _tailDataPageIndex;
-        long _tailDataItemOffset;
-
-        // Head info
-        long _headDataPageIndex;
-        long _headIndexPageIndex;
+        private static readonly string MetaPageFolder = "meta";
+        private static readonly string IndexPageFolder = "index";
+        private static readonly string DataPageFolder = "data";
 
         // Index pages
-        static readonly long IndexItemsPerPage = 50000;
-        readonly long IndexItemSize;
-        readonly long IndexPageSize;
-        IPageFactory _indexPageFactory;
+        private static readonly long IndexItemsPerPage = 50000;
+        private static readonly long DefaultDataPageSize = 128 * 1024 * 1024;
+        private static readonly long MinimumDataPageSize = 32 * 1024 * 1024;
 
         // Data pages
-        readonly long DataPageSize;
-        static readonly long DefaultDataPageSize = 128 * 1024 * 1024;
-        static readonly long MinimumDataPageSize = 32 * 1024 * 1024;
-        IPageFactory _dataPageFactory;
+        private readonly long DataPageSize;
+        private readonly long IndexItemSize;
+        private readonly long IndexPageSize;
 
-        Object _lockObject = new Object();
+        private readonly long MetaDataItemSize;
 
-        public PersistentQueue(string queuePath) : this(queuePath, DefaultDataPageSize) { }
+        // Folders
+        protected readonly string QueuePath;
+        private IPageFactory _dataPageFactory;
+
+        // Head info
+        private long _headDataPageIndex;
+        private long _headIndexPageIndex;
+        private IPageFactory _indexPageFactory;
+
+        private readonly object _lockObject = new object();
+
+        // MetaData
+        private MetaData _metaData;
+        private IPageFactory _metaPageFactory;
+        private long _tailDataItemOffset;
+
+        // Tail info
+        private long _tailDataPageIndex;
+
+        public PersistentQueue(string queuePath) : this(queuePath, DefaultDataPageSize)
+        {
+        }
 
         public PersistentQueue(string queuePath, long pageSize)
         {
@@ -59,17 +56,25 @@ namespace PersistentQueue
             Init();
         }
 
-        void Init()
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        private void Init()
         {
             // Init page factories
-            _metaPageFactory = new PageFactory(MetaDataItemSize, Path.Combine(QueuePath, MetaPageFolder)); // Page size = item size => only 1 item possible.
+            _metaPageFactory =
+                new PageFactory(MetaDataItemSize,
+                    Path.Combine(QueuePath, MetaPageFolder)); // Page size = item size => only 1 item possible.
             _indexPageFactory = new PageFactory(IndexPageSize, Path.Combine(QueuePath, IndexPageFolder));
             _dataPageFactory = new PageFactory(DataPageSize, Path.Combine(QueuePath, DataPageFolder));
 
             InitializeMetaData();
         }
 
-        void InitializeMetaData()
+        private void InitializeMetaData()
         {
             var metaPage = _metaPageFactory.GetPage(0);
             using (var readStream = metaPage.GetReadStream(0, MetaDataItemSize))
@@ -89,25 +94,26 @@ namespace PersistentQueue
             _headIndexPageIndex = GetIndexPageIndex(GetPreviousIndex(_metaData.HeadIndex));
         }
 
-        long GetIndexPageIndex(long index)
+        private long GetIndexPageIndex(long index)
         {
             return index / IndexItemsPerPage;
         }
-        long GetIndexItemOffset(long index)
+
+        private long GetIndexItemOffset(long index)
         {
-            return (index % IndexItemsPerPage) * IndexItemSize;
+            return index % IndexItemsPerPage * IndexItemSize;
         }
 
-        long GetPreviousIndex(long index)
+        private long GetPreviousIndex(long index)
         {
             // TODO: Handle wrap situations => index == long.MaxValue
             if (index > 0)
                 return index - 1;
-            
+
             return index;
         }
 
-        IndexItem GetIndexItem(long index)
+        private IndexItem GetIndexItem(long index)
         {
             IndexItem indexItem;
 
@@ -116,12 +122,13 @@ namespace PersistentQueue
             {
                 indexItem = IndexItem.ReadFromStream(stream);
             }
+
             _indexPageFactory.ReleasePage(indexPage.Index);
-            
+
             return indexItem;
         }
 
-        void PersistMetaData()
+        private void PersistMetaData()
         {
             var metaPage = _metaPageFactory.GetPage(0);
             using (var writeStream = metaPage.GetWriteStream(0, MetaDataItemSize))
@@ -141,7 +148,7 @@ namespace PersistentQueue
                 if (itemData.Length > DataPageSize)
                     throw new ArgumentOutOfRangeException("Item data length is greater than queue data page size");
 
-                if (_tailDataItemOffset + itemData.Length > DataPageSize)       // Not enough space in current page
+                if (_tailDataItemOffset + itemData.Length > DataPageSize) // Not enough space in current page
                 {
                     if (_tailDataPageIndex == long.MaxValue)
                         _tailDataPageIndex = 0;
@@ -169,7 +176,8 @@ namespace PersistentQueue
                 var indexPage = _indexPageFactory.GetPage(GetIndexPageIndex(_metaData.TailIndex));
 
                 // Get write stream
-                using (var writeStream = indexPage.GetWriteStream(GetIndexItemOffset(_metaData.TailIndex), IndexItemSize))
+                using (var writeStream =
+                    indexPage.GetWriteStream(GetIndexItemOffset(_metaData.TailIndex), IndexItemSize))
                 {
                     var indexItem = new IndexItem
                     {
@@ -198,8 +206,8 @@ namespace PersistentQueue
         {
             lock (_lockObject)
             {
-                if (_metaData.HeadIndex == _metaData.TailIndex)     // Head cought up with tail. Queue is empty.
-                    return null;                                    // return null or Stream.Null?
+                if (_metaData.HeadIndex == _metaData.TailIndex) // Head cought up with tail. Queue is empty.
+                    return null; // return null or Stream.Null?
 
                 // Delete previous index page if we are moving along to the next
                 if (GetIndexPageIndex(_metaData.HeadIndex) != _headIndexPageIndex)
@@ -222,7 +230,7 @@ namespace PersistentQueue
                 var dataPage = _dataPageFactory.GetPage(indexItem.DataPageIndex);
 
                 // Get read stream
-                MemoryStream memoryStream = new MemoryStream();
+                var memoryStream = new MemoryStream();
                 using (var readStream = dataPage.GetReadStream(indexItem.ItemOffset, indexItem.ItemLength))
                 {
                     readStream.CopyTo(memoryStream, 4 * 1024);
@@ -251,12 +259,6 @@ namespace PersistentQueue
                 _indexPageFactory?.Dispose();
                 _dataPageFactory?.Dispose();
             }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
         }
     }
 }
