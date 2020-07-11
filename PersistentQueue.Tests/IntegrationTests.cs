@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using System.Text;
 using NUnit.Framework;
 using Shouldly;
 
@@ -28,7 +27,7 @@ namespace PersistentQueue.Tests
             using var queue = new UnitTestPersistentQueue();
 
             // Act
-            for (var i = 0; i < 5; i++) 
+            for (var i = 0; i < 5; i++)
                 queue.Enqueue(1);
 
             Stream outStream;
@@ -40,10 +39,8 @@ namespace PersistentQueue.Tests
                 message.ShouldStartWith("Message ");
                 count++;
             }
-            
+
             count.ShouldBe(5);
         }
     }
-    
-    
 }

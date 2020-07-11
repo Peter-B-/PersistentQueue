@@ -46,12 +46,10 @@ namespace PersistentQueue.Tests
             Enqueue(s);
         }
 
-        public void EnqueueMany(int numberOfItems)
+        public void EnqueueMany(int count, int start = 1)
         {
-            Enumerable.Range(1, numberOfItems)
+            Enumerable.Range(start, count)
                 .ForEach(Enqueue);
         }
-
-        
     }
 }

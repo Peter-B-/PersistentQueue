@@ -10,10 +10,10 @@ namespace PersistentQueue.Cache
     {
         private static readonly int DefaultTtl = 10 * 1000;
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
-        private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
-        private readonly int Ttl;
         private readonly Dictionary<TKey, TValue> _items;
+        private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
         private readonly Dictionary<TKey, TTLValue> _ttlDict;
+        private readonly int Ttl;
 
         public Cache() : this(DefaultTtl)
         {

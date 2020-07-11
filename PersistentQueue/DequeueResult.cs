@@ -3,22 +3,30 @@ using System.Collections.Generic;
 
 namespace PersistentQueue
 {
-    class DequeueResult : IDequeueResult
+    internal class DequeueResult : IDequeueResult
     {
-        public DequeueResult(IReadOnlyList<Memory<byte>> data)
+        private readonly ItemRange _itemRange;
+        private Action<ItemRange> _commitCallBack;
+        private Action<ItemRange> _rejectCallBack;
+
+        public DequeueResult(List<Memory<byte>> data, ItemRange itemRange, Action<ItemRange> commitCallBack, Action<ItemRange> rejectCallBack)
         {
+            _itemRange = itemRange;
+            _commitCallBack = commitCallBack;
+            _rejectCallBack = rejectCallBack;
             Data = data;
         }
 
         public IReadOnlyList<Memory<byte>> Data { get; }
+
         public void Commit()
         {
-            throw new NotImplementedException();
+            _commitCallBack(_itemRange);
         }
 
         public void Reject()
         {
-            throw new NotImplementedException();
+            _rejectCallBack(_itemRange);
         }
     }
 }

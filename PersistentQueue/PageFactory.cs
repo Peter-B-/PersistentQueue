@@ -8,9 +8,9 @@ namespace PersistentQueue
     {
         private static readonly string PageFileName = "page";
         private static readonly string PageFileSuffix = ".dat";
+        private readonly Cache<long, IPage> _pageCache;
         private readonly string PageDir;
         private readonly long PageSize;
-        private readonly Cache<long, IPage> _pageCache;
         private bool disposed;
 
         public PageFactory(long pageSize, string pageDirectory)
@@ -30,9 +30,7 @@ namespace PersistentQueue
             IPage page;
 
             if (!_pageCache.TryGetValue(index, out page))
-            {
                 page = _pageCache[index] = new Page(GetFilePath(index), PageSize, index);
-            }
 
             return page;
         }
@@ -77,10 +75,8 @@ namespace PersistentQueue
                 return;
 
             if (disposing)
-            {
                 if (_pageCache != null)
                     _pageCache.RemoveAll();
-            }
 
             disposed = true;
         }

@@ -26,7 +26,8 @@ namespace TestApp
 
                     for (var j = 0; j < items; j++)
                     {
-                        var s = Encoding.UTF8.GetBytes($"This is line number {j}. Just adding some more text to grow the item size");
+                        var s = Encoding.UTF8.GetBytes(
+                            $"This is line number {j}. Just adding some more text to grow the item size");
 
                         q.Enqueue(s);
                     }

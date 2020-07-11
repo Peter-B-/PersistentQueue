@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace PersistentQueue
@@ -16,6 +16,8 @@ namespace PersistentQueue
         private static readonly long IndexItemsPerPage = 50000;
         private static readonly long DefaultDataPageSize = 128 * 1024 * 1024;
         private static readonly long MinimumDataPageSize = 32 * 1024 * 1024;
+
+        private readonly object _lockObject = new object();
 
         // Data pages
         private readonly long DataPageSize;
@@ -32,8 +34,6 @@ namespace PersistentQueue
         private long _headDataPageIndex;
         private long _headIndexPageIndex;
         private IPageFactory _indexPageFactory;
-
-        private readonly object _lockObject = new object();
 
         // MetaData
         private MetaData _metaData;
@@ -254,9 +254,93 @@ namespace PersistentQueue
             }
         }
 
-        public Task<IDequeueResult> DequeueAsync(int maxElements)
+        public async Task<IDequeueResult> DequeueAsync(int maxElements)
         {
-            return Task.FromResult(new DequeueResult(new List<Memory<byte>>()) as IDequeueResult);
+            lock (_lockObject)
+            {
+                var headIndex = _metaData.HeadIndex;
+                
+                var availableElements = _metaData.TailIndex - headIndex;
+                var noOfItems = (int)Math.Min(availableElements, maxElements);
+                if (noOfItems == 0)
+                    throw new NotImplementedException();
+
+
+                var data =
+                    Enumerable.Range(0, noOfItems)
+                        .Select(offset => headIndex + offset)
+                        .Select(ReadItem)
+                        .ToList();
+                
+
+                var result = new DequeueResult(data, new ItemRange(headIndex, noOfItems), CommitBatch, RejectBatch);
+                return result;
+            }
+
+        }
+
+        private void RejectBatch(ItemRange range)
+        {
+        }
+
+        private void CommitBatch(ItemRange range)
+        {
+            var newHeadIndex = range.HeadIndex + range.ItemCount;
+            long oldHeadIndex;
+            
+            lock (_lockObject)
+            {
+                // Update meta data
+                oldHeadIndex = _metaData.HeadIndex;
+                if (newHeadIndex > oldHeadIndex)
+                    _metaData.HeadIndex = newHeadIndex;
+                
+                PersistMetaData();
+            }
+
+            if (newHeadIndex > oldHeadIndex)
+            {
+                // Todo: Remove old files
+                // // Delete previous index page if we are moving along to the next
+                // if (GetIndexPageIndex(_metaData.HeadIndex) != _headIndexPageIndex)
+                // {
+                //     _indexPageFactory.DeletePage(_headIndexPageIndex);
+                //     _headIndexPageIndex = GetIndexPageIndex(_metaData.HeadIndex);
+                // }
+                //
+                // // Get index item for head index
+                // var indexItem = GetIndexItem(_metaData.HeadIndex);
+                //
+                // // Delete previous data page if we are moving along to the next
+                // if (indexItem.DataPageIndex != _headDataPageIndex)
+                // {
+                //     _dataPageFactory.DeletePage(_headDataPageIndex);
+                //     _headDataPageIndex = indexItem.DataPageIndex;
+                // }            
+            }
+        }
+
+        private Memory<byte> ReadItem(long itemIndex)
+        {
+            // Get index item for head index
+            var indexItem = GetIndexItem(itemIndex);
+
+            // Get data page
+            var dataPage = _dataPageFactory.GetPage(indexItem.DataPageIndex);
+
+            // Get read stream
+            // Todo: Optimize: Remove copy operation
+            var buffer = new byte[indexItem.ItemLength];
+            using (var memoryStream = new MemoryStream(buffer))
+            using (var readStream = dataPage.GetReadStream(indexItem.ItemOffset, indexItem.ItemLength))
+            {
+                readStream.CopyTo(memoryStream, 4 * 1024);
+                memoryStream.Position = 0;
+            }
+
+            _dataPageFactory.ReleasePage(dataPage.Index);
+
+            return buffer;
         }
 
         protected virtual void Dispose(bool disposing)
