@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Text;
 using NUnit.Framework;
 using Shouldly;
 
@@ -29,7 +30,7 @@ namespace PersistentQueue.Tests
             // Act
             for (int i = 0; i < 5; i++)
             {
-                using var s = GetStream("Message " + i);
+                var s = Encoding.UTF8.GetBytes($"Message {i}");
                 queue.Enqueue(s);
             }
 
@@ -45,17 +46,6 @@ namespace PersistentQueue.Tests
             
             count.ShouldBe(5);
         }
-        
-        private static Stream GetStream(string s)
-        {
-            var ms = new MemoryStream();
-            var sw = new StreamWriter(ms);
-            sw.Write(s);
-            sw.Flush();
-            ms.Position = 0;
-            return ms;
-        }
-
     }
     
     

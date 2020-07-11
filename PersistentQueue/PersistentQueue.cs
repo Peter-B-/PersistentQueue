@@ -137,7 +137,7 @@ namespace PersistentQueue
             }
         }
 
-        public void Enqueue(Stream itemData)
+        public void Enqueue(ReadOnlySpan<byte> itemData)
         {
             lock (_lockObject)
             {
@@ -165,7 +165,7 @@ namespace PersistentQueue
                 using (var writeStream = dataPage.GetWriteStream(_tailDataItemOffset, itemData.Length))
                 {
                     // Write data to write stream
-                    itemData.CopyTo(writeStream, 4 * 1024);
+                    writeStream.Write(itemData);
                 }
 
                 // Release our reference to the data page

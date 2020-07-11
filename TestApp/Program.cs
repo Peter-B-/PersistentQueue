@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace TestApp
@@ -24,12 +25,11 @@ namespace TestApp
                     var swInner = Stopwatch.StartNew();
 
                     for (var j = 0; j < items; j++)
-                        using (var s =
-                            GetStream(string.Format(
-                                "This is line number {0}. Just adding some more text to grow the item size", j)))
-                        {
-                            q.Enqueue(s);
-                        }
+                    {
+                        var s = Encoding.UTF8.GetBytes($"This is line number {j}. Just adding some more text to grow the item size");
+
+                        q.Enqueue(s);
+                    }
 
                     swInner.Stop();
                     Console.WriteLine("Thread {0} Enqueued {1} items in {2} ms ({3:0} items/s)",
@@ -175,16 +175,6 @@ namespace TestApp
             //    //Console.ReadLine();
         }
 
-
-        private static Stream GetStream(string s)
-        {
-            var ms = new MemoryStream();
-            var sw = new StreamWriter(ms);
-            sw.Write(s);
-            sw.Flush();
-            ms.Position = 0;
-            return ms;
-        }
 
         private static byte[] GetBytes(string str)
         {
