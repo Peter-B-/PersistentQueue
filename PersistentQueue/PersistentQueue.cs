@@ -22,10 +22,6 @@ namespace PersistentQueue
 
         // Folders
         private IPageFactory _dataPageFactory;
-
-        // Head info
-        private long _headDataPageIndex;
-        private long _headIndexPageIndex;
         private IPageFactory _indexPageFactory;
 
         // MetaData
@@ -89,11 +85,6 @@ namespace PersistentQueue
             var prevTailIndexItem = GetIndexItem(prevTailIndex);
             _tailDataPageIndex = prevTailIndexItem.DataPageIndex;
             _tailDataItemOffset = prevTailIndexItem.ItemOffset + prevTailIndexItem.ItemLength;
-
-            var prevHeadIndex = GetPreviousIndex(_metaData.HeadIndex);
-            var prevHeadIndexItem = GetIndexItem(prevHeadIndex);
-            _headDataPageIndex = prevHeadIndexItem.DataPageIndex;
-            _headIndexPageIndex = GetIndexPageIndex(GetPreviousIndex(_metaData.HeadIndex));
         }
 
         private long GetIndexPageIndex(long index)
@@ -250,23 +241,16 @@ namespace PersistentQueue
 
             if (newHeadIndex > oldHeadIndex)
             {
-                // Todo: Remove old files
-                // // Delete previous index page if we are moving along to the next
-                // if (GetIndexPageIndex(_metaData.HeadIndex) != _headIndexPageIndex)
-                // {
-                //     _indexPageFactory.DeletePage(_headIndexPageIndex);
-                //     _headIndexPageIndex = GetIndexPageIndex(_metaData.HeadIndex);
-                // }
-                //
-                // // Get index item for head index
-                // var indexItem = GetIndexItem(_metaData.HeadIndex);
-                //
-                // // Delete previous data page if we are moving along to the next
-                // if (indexItem.DataPageIndex != _headDataPageIndex)
-                // {
-                //     _dataPageFactory.DeletePage(_headDataPageIndex);
-                //     _headDataPageIndex = indexItem.DataPageIndex;
-                // }            
+                var oldHeadIndexItem = GetIndexItem(oldHeadIndex);
+                var newHeadIndexItem = GetIndexItem(newHeadIndex);
+
+                // Delete previous data page if we are moving along to the next
+                for (var dataPageIndex = oldHeadIndexItem.DataPageIndex; dataPageIndex < newHeadIndexItem.DataPageIndex; dataPageIndex++)
+                    _dataPageFactory.DeletePage(dataPageIndex);
+
+                // Delete previous index page if we are moving along to the next
+                for (var indexPageIndex = GetIndexPageIndex(oldHeadIndex); indexPageIndex < GetIndexPageIndex(newHeadIndex); indexPageIndex++)
+                    _indexPageFactory.DeletePage(indexPageIndex);
             }
         }
 

@@ -5,6 +5,8 @@
         public UnitTestQueueConfiguration()
         {
             QueuePath = UnitTestPersistentQueue.GetTempPath();
+            DataPageSize = 10 * 1024;
+            IndexItemsPerPage = 200;
         }
     }
 }

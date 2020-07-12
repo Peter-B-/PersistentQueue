@@ -64,5 +64,6 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             // Assert
             result.Data.Count.ShouldBe(2);
         }
+
     }
 }

@@ -111,8 +111,7 @@ namespace PersistentQueue.Tests.PersistentQueueTests
 
             // Act & Assert
             queue.EnqueueMany(20);
-            Directory.GetFiles(config.GetDataPath()).Length.ShouldBe(10);
-
+            Directory.GetFiles(config.GetIndexPath()).Length.ShouldBe(10);
 
             var result = await queue.DequeueAsync(2);
             result.Commit();
@@ -135,7 +134,7 @@ namespace PersistentQueue.Tests.PersistentQueueTests
 
             // Act & Assert
             queue.EnqueueMany(20);
-            Directory.GetFiles(config.GetDataPath()).Length.ShouldBe(10);
+            Directory.GetFiles(config.GetIndexPath()).Length.ShouldBe(10);
 
             var result = await queue.DequeueAsync(10);
             result.Commit();

@@ -8,12 +8,13 @@ namespace PersistentQueue.Tests
 {
     public class UnitTestPersistentQueue : PersistentQueue
     {
-        public UnitTestPersistentQueue() : base(GetTempPath(), 10 << 10)
+        public UnitTestPersistentQueue() : this(new UnitTestQueueConfiguration())
         {
         }
 
-        public UnitTestPersistentQueue(PersistentQueueConfiguration configuration) : base(configuration)
+        public UnitTestPersistentQueue(UnitTestQueueConfiguration configuration) : base(configuration)
         {
+            TestContext.WriteLine("Using path " + configuration.QueuePath);
         }
 
         public static string GetTempPath()
