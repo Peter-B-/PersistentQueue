@@ -12,15 +12,11 @@ namespace PersistentQueue.Tests
         {
         }
 
-        public UnitTestPersistentQueue(string queuePath) : base(queuePath)
+        public UnitTestPersistentQueue(PersistentQueueConfiguration configuration) : base(configuration)
         {
         }
 
-        public UnitTestPersistentQueue(string queuePath, long pageSize) : base(queuePath, pageSize)
-        {
-        }
-
-        private static string GetTempPath()
+        public static string GetTempPath()
         {
             return Path.Combine(Path.GetTempPath(), "PersistentQueue.Tests", Guid.NewGuid().ToString());
         }
@@ -36,8 +32,8 @@ namespace PersistentQueue.Tests
 
         private void DeleteQueue()
         {
-            TestContext.WriteLine("Delete " + QueuePath);
-            Directory.Delete(QueuePath, true);
+            TestContext.WriteLine("Delete " + Configuration.QueuePath);
+            Directory.Delete(Configuration.QueuePath, true);
         }
 
         public void Enqueue(int itemNo)

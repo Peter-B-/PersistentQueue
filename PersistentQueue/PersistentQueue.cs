@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,15 +8,7 @@ namespace PersistentQueue
 {
     public class PersistentQueue : IDisposable
     {
-        private static readonly string MetaPageFolder = "meta";
-        private static readonly string IndexPageFolder = "index";
-        private static readonly string DataPageFolder = "data";
-
-        // Index pages
-        private static readonly long IndexItemsPerPage = 50000;
-        private static readonly long DefaultDataPageSize = 128 * 1024 * 1024;
-        private static readonly long MinimumDataPageSize = 32 * 1024 * 1024;
-
+        protected readonly PersistentQueueConfiguration Configuration;
         private readonly object _lockObject = new object();
 
         private readonly QueueStateMonitor _queueMonitor;
@@ -30,7 +21,6 @@ namespace PersistentQueue
         private readonly long MetaDataItemSize;
 
         // Folders
-        protected readonly string QueuePath;
         private IPageFactory _dataPageFactory;
 
         // Head info
@@ -46,21 +36,25 @@ namespace PersistentQueue
         // Tail info
         private long _tailDataPageIndex;
 
-        public PersistentQueue(string queuePath) : this(queuePath, DefaultDataPageSize)
+        public PersistentQueue(string queuePath) : this(PersistentQueueConfiguration.GetDefault(queuePath))
         {
         }
 
-        public PersistentQueue(string queuePath, long pageSize)
+        public PersistentQueue(string queuePath, long dataPageSize) : this(PersistentQueueConfiguration.GetDefault(queuePath, dataPageSize))
         {
-            QueuePath = queuePath;
-            DataPageSize = pageSize;
+        }
+
+        public PersistentQueue(PersistentQueueConfiguration configuration)
+        {
+            Configuration = configuration;
 
             MetaDataItemSize = MetaData.Size();
             IndexItemSize = IndexItem.Size();
-            IndexPageSize = IndexItemSize * IndexItemsPerPage;
-
-            Init();
+            IndexPageSize = IndexItemSize * configuration.IndexItemsPerPage;
+            DataPageSize = Configuration.DataPageSize;
             
+            Init();
+
             _queueMonitor = QueueStateMonitor.Initialize(_metaData.TailIndex);
         }
 
@@ -73,11 +67,10 @@ namespace PersistentQueue
         private void Init()
         {
             // Init page factories
-            _metaPageFactory =
-                new PageFactory(MetaDataItemSize,
-                    Path.Combine(QueuePath, MetaPageFolder)); // Page size = item size => only 1 item possible.
-            _indexPageFactory = new PageFactory(IndexPageSize, Path.Combine(QueuePath, IndexPageFolder));
-            _dataPageFactory = new PageFactory(DataPageSize, Path.Combine(QueuePath, DataPageFolder));
+            // MetaPage: Page size = item size => only 1 item possible.
+            _metaPageFactory = new PageFactory(MetaDataItemSize, Configuration.GetMetaPath());
+            _indexPageFactory = new PageFactory(IndexPageSize, Configuration.GetIndexPath());
+            _dataPageFactory = new PageFactory(DataPageSize, Configuration.GetDataPath());
 
             InitializeMetaData();
         }
@@ -104,12 +97,12 @@ namespace PersistentQueue
 
         private long GetIndexPageIndex(long index)
         {
-            return index / IndexItemsPerPage;
+            return index / Configuration.IndexItemsPerPage;
         }
 
         private long GetIndexItemOffset(long index)
         {
-            return index % IndexItemsPerPage * IndexItemSize;
+            return index %  Configuration.IndexItemsPerPage * IndexItemSize;
         }
 
         private long GetPreviousIndex(long index)
@@ -206,19 +199,19 @@ namespace PersistentQueue
                     _metaData.TailIndex = 0;
                 else
                     _metaData.TailIndex++;
-                
+
                 _queueMonitor.Update(_metaData.TailIndex);
                 PersistMetaData();
             }
         }
-   
+
         public async Task<IDequeueResult> DequeueAsync(int maxElements)
         {
             var queueState = _queueMonitor.GetCurrent();
 
             var headIndex = _metaData.HeadIndex;
-            
-            while (headIndex == queueState.TailIndex) 
+
+            while (headIndex == queueState.TailIndex)
                 queueState = await queueState.NextUpdate.ConfigureAwait(false);
 
             var availableElements = queueState.TailIndex - headIndex;
