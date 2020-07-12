@@ -58,6 +58,7 @@ namespace PersistentQueue
             _queueMonitor = QueueStateMonitor.Initialize(_metaData.TailIndex);
         }
 
+        public bool HasItems => (_metaData.TailIndex - _metaData.HeadIndex) > 0;
         public void Dispose()
         {
             Dispose(true);
