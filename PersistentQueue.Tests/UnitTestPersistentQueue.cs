@@ -1,7 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
-using System.Text;
 using NUnit.Framework;
 
 namespace PersistentQueue.Tests
@@ -36,17 +34,5 @@ namespace PersistentQueue.Tests
             TestContext.WriteLine("Delete " + Configuration.QueuePath);
             Directory.Delete(Configuration.QueuePath, true);
         }
-
-        public void Enqueue(int itemNo)
-        {
-            var s = Encoding.UTF8.GetBytes($"Message {itemNo}");
-            Enqueue(s);
-        }
-
-        public void EnqueueMany(int count, int start = 1)
-        {
-            Enumerable.Range(start, count)
-                .ForEach(Enqueue);
-        }
-    }
+ }
 }

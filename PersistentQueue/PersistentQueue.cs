@@ -99,7 +99,6 @@ namespace PersistentQueue
 
         private long GetPreviousIndex(long index)
         {
-            // TODO: Handle wrap situations => index == long.MaxValue
             if (index > 0)
                 return index - 1;
 
@@ -143,11 +142,7 @@ namespace PersistentQueue
 
                 if (_tailDataItemOffset + itemData.Length > DataPageSize) // Not enough space in current page
                 {
-                    if (_tailDataPageIndex == long.MaxValue)
-                        _tailDataPageIndex = 0;
-                    else
-                        _tailDataPageIndex++;
-
+                    _tailDataPageIndex++;
                     _tailDataItemOffset = 0;
                 }
 
@@ -187,10 +182,7 @@ namespace PersistentQueue
                 _tailDataItemOffset += itemData.Length;
 
                 // Update meta data
-                if (_metaData.TailIndex == long.MaxValue)
-                    _metaData.TailIndex = 0;
-                else
-                    _metaData.TailIndex++;
+                _metaData.TailIndex++;
 
                 _queueMonitor.Update(_metaData.TailIndex);
                 PersistMetaData();
