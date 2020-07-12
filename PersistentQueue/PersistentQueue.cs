@@ -211,56 +211,7 @@ namespace PersistentQueue
                 PersistMetaData();
             }
         }
-
-        public Stream Dequeue()
-        {
-            lock (_lockObject)
-            {
-                if (_metaData.HeadIndex == _metaData.TailIndex) // Head cought up with tail. Queue is empty.
-                    return null; // return null or Stream.Null?
-
-                // Delete previous index page if we are moving along to the next
-                if (GetIndexPageIndex(_metaData.HeadIndex) != _headIndexPageIndex)
-                {
-                    _indexPageFactory.DeletePage(_headIndexPageIndex);
-                    _headIndexPageIndex = GetIndexPageIndex(_metaData.HeadIndex);
-                }
-
-                // Get index item for head index
-                var indexItem = GetIndexItem(_metaData.HeadIndex);
-
-                // Delete previous data page if we are moving along to the next
-                if (indexItem.DataPageIndex != _headDataPageIndex)
-                {
-                    _dataPageFactory.DeletePage(_headDataPageIndex);
-                    _headDataPageIndex = indexItem.DataPageIndex;
-                }
-
-                // Get data page
-                var dataPage = _dataPageFactory.GetPage(indexItem.DataPageIndex);
-
-                // Get read stream
-                var memoryStream = new MemoryStream();
-                using (var readStream = dataPage.GetReadStream(indexItem.ItemOffset, indexItem.ItemLength))
-                {
-                    readStream.CopyTo(memoryStream, 4 * 1024);
-                    memoryStream.Position = 0;
-                }
-
-                _dataPageFactory.ReleasePage(dataPage.Index);
-
-                // Update meta data
-                if (_metaData.HeadIndex == long.MaxValue)
-                    _metaData.HeadIndex = 0;
-                else
-                    _metaData.HeadIndex++;
-
-                PersistMetaData();
-
-                return memoryStream;
-            }
-        }
-
+   
         public async Task<IDequeueResult> DequeueAsync(int maxElements)
         {
             var queueState = _queueMonitor.GetCurrent();

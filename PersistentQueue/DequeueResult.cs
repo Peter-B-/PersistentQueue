@@ -6,8 +6,8 @@ namespace PersistentQueue
     internal class DequeueResult : IDequeueResult
     {
         private readonly ItemRange _itemRange;
-        private Action<ItemRange> _commitCallBack;
-        private Action<ItemRange> _rejectCallBack;
+        private readonly Action<ItemRange> _commitCallBack;
+        private readonly Action<ItemRange> _rejectCallBack;
 
         public DequeueResult(List<Memory<byte>> data, ItemRange itemRange, Action<ItemRange> commitCallBack, Action<ItemRange> rejectCallBack)
         {
