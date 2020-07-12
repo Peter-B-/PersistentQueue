@@ -9,15 +9,14 @@ namespace PersistentQueue.Tests.PersistentQueueTests
     public class FileHandling
     {
         [Test]
-        public void NewDataFilesAreCreated()
+        public void DataFiles_AreCreated()
         {
             // Arrange
-            var config = new PersistentQueueConfiguration()
+            var config = new UnitTestQueueConfiguration()
             {
-                QueuePath = UnitTestPersistentQueue.GetTempPath(),
                 DataPageSize = 64,
             };
-            var queue = new UnitTestPersistentQueue(config);
+            using var queue = new UnitTestPersistentQueue(config);
             
             
             // Act & Assert
@@ -29,6 +28,80 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             Directory.GetFiles(config.GetDataPath()).Length.ShouldBe(2);
             queue.Enqueue(new byte[32]);
             Directory.GetFiles(config.GetDataPath()).Length.ShouldBe(2);
+        }
+
+        [Test]
+        public async Task DataFiles_AreDeletedAfterCommit()
+        {
+            // Arrange
+            var config = new UnitTestQueueConfiguration()
+            {
+                DataPageSize = 64,
+            };
+            using var queue = new UnitTestPersistentQueue(config);
+
+
+            // Act & Assert
+            for (var i = 0; i < 20; i++)
+                queue.Enqueue(new byte[32]);
+
+            Directory.GetFiles(config.GetDataPath()).Length.ShouldBe(10);
+
+
+            var result = await queue.DequeueAsync(2);
+            result.Commit();
+            Directory.GetFiles(config.GetDataPath()).Length.ShouldBe(9);
+
+            result = await queue.DequeueAsync(4);
+            result.Commit();
+            Directory.GetFiles(config.GetDataPath()).Length.ShouldBe(7);
+        }
+        
+        [Test]
+        public void IndexFiles_AreCreated()
+        {
+            // Arrange
+            var config = new UnitTestQueueConfiguration()
+            {
+                IndexItemsPerPage = 2,
+            };
+            using var queue = new UnitTestPersistentQueue(config);
+            
+            
+            // Act & Assert
+            queue.Enqueue(1);
+            Directory.GetFiles(config.GetIndexPath()).Length.ShouldBe(1);
+            queue.Enqueue(1);
+            Directory.GetFiles(config.GetIndexPath()).Length.ShouldBe(1);
+            queue.Enqueue(1);
+            Directory.GetFiles(config.GetIndexPath()).Length.ShouldBe(2);
+            queue.Enqueue(1);
+            Directory.GetFiles(config.GetIndexPath()).Length.ShouldBe(2);
+        }
+        
+        [Test]
+        public async Task IndexFiles_AreDeletedAfterCommit()
+        {
+            // Arrange
+            var config = new UnitTestQueueConfiguration()
+            {
+                IndexItemsPerPage = 2
+            };
+            using var queue = new UnitTestPersistentQueue(config);
+
+
+            // Act & Assert
+            queue.EnqueueMany(20);
+            Directory.GetFiles(config.GetDataPath()).Length.ShouldBe(10);
+
+
+            var result = await queue.DequeueAsync(2);
+            result.Commit();
+            Directory.GetFiles(config.GetIndexPath()).Length.ShouldBe(9);
+
+            result = await queue.DequeueAsync(4);
+            result.Commit();
+            Directory.GetFiles(config.GetIndexPath()).Length.ShouldBe(7);
         }
     }
 }
