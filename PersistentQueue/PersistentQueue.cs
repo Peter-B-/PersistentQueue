@@ -233,15 +233,15 @@ namespace PersistentQueue
 
             if (newHeadIndex > oldHeadIndex)
             {
-                var oldHeadIndexItem = GetIndexItem(oldHeadIndex);
-                var newHeadIndexItem = GetIndexItem(newHeadIndex);
+                var lastHeadIndex = GetPreviousIndex(oldHeadIndex);
+                var lastWrittenIndex = GetPreviousIndex(newHeadIndex);
+                var oldHeadIndexItem = GetIndexItem(lastHeadIndex);
+                var lastWrittenIndexItem = GetIndexItem(lastWrittenIndex);
 
-                // Delete previous data page if we are moving along to the next
-                for (var dataPageIndex = oldHeadIndexItem.DataPageIndex; dataPageIndex < newHeadIndexItem.DataPageIndex; dataPageIndex++)
+                for (var dataPageIndex = oldHeadIndexItem.DataPageIndex; dataPageIndex < lastWrittenIndexItem.DataPageIndex; dataPageIndex++)
                     _dataPageFactory.DeletePage(dataPageIndex);
 
-                // Delete previous index page if we are moving along to the next
-                for (var indexPageIndex = GetIndexPageIndex(oldHeadIndex); indexPageIndex < GetIndexPageIndex(newHeadIndex); indexPageIndex++)
+                for (var indexPageIndex = GetIndexPageIndex(lastHeadIndex); indexPageIndex < GetIndexPageIndex(lastWrittenIndex); indexPageIndex++)
                     _indexPageFactory.DeletePage(indexPageIndex);
             }
         }

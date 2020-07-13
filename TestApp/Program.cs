@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using PersistentQueue.Utils;
 
 namespace TestApp
 {
@@ -56,10 +57,9 @@ namespace TestApp
 
 
             var count = 0;
-            while (true)
+            while (q.HasItems)
             {
                 var dequeueTask = q.DequeueAsync(100);
-                if (!dequeueTask.IsCompleted) break;
                 var res = await dequeueTask;
                 foreach (var memory in res.Data)
                 {
