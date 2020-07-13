@@ -14,19 +14,17 @@ namespace PersistentQueue
         private readonly QueueStateMonitor _queueMonitor;
 
         // Data pages
-        private readonly long DataPageSize;
-        private readonly long IndexItemSize;
-        private readonly long IndexPageSize;
+        private readonly long _dataPageSize;
+        private readonly long _indexItemSize;
+        private readonly long _metaDataItemSize;
 
-        private readonly long MetaDataItemSize;
-
-        // Folders
-        private IPageFactory _dataPageFactory;
-        private IPageFactory _indexPageFactory;
+        // Page factories
+        private readonly IPageFactory _dataPageFactory;
+        private readonly IPageFactory _indexPageFactory;
+        private readonly IPageFactory _metaPageFactory;
 
         // MetaData
         private MetaData _metaData;
-        private IPageFactory _metaPageFactory;
         private long _tailDataItemOffset;
 
         // Tail info
@@ -44,12 +42,18 @@ namespace PersistentQueue
         {
             Configuration = configuration;
 
-            MetaDataItemSize = MetaData.Size();
-            IndexItemSize = IndexItem.Size();
-            IndexPageSize = IndexItemSize * configuration.IndexItemsPerPage;
-            DataPageSize = Configuration.DataPageSize;
-            
-            Init();
+            _metaDataItemSize = MetaData.Size();
+            _indexItemSize = IndexItem.Size();
+            var indexPageSize = _indexItemSize * configuration.IndexItemsPerPage;
+            _dataPageSize = Configuration.DataPageSize;
+
+            // Init page factories
+            // MetaPage: Page size = item size => only 1 item possible.
+            _metaPageFactory = new PageFactory(_metaDataItemSize, Configuration.GetMetaPath());
+            _indexPageFactory = new PageFactory(indexPageSize, Configuration.GetIndexPath());
+            _dataPageFactory = new PageFactory(_dataPageSize, Configuration.GetDataPath());
+
+            InitializeMetaData();
 
             _queueMonitor = QueueStateMonitor.Initialize(_metaData.TailIndex);
         }
@@ -61,21 +65,10 @@ namespace PersistentQueue
             GC.SuppressFinalize(this);
         }
 
-        private void Init()
-        {
-            // Init page factories
-            // MetaPage: Page size = item size => only 1 item possible.
-            _metaPageFactory = new PageFactory(MetaDataItemSize, Configuration.GetMetaPath());
-            _indexPageFactory = new PageFactory(IndexPageSize, Configuration.GetIndexPath());
-            _dataPageFactory = new PageFactory(DataPageSize, Configuration.GetDataPath());
-
-            InitializeMetaData();
-        }
-
         private void InitializeMetaData()
         {
             var metaPage = _metaPageFactory.GetPage(0);
-            using (var readStream = metaPage.GetReadStream(0, MetaDataItemSize))
+            using (var readStream = metaPage.GetReadStream(0, _metaDataItemSize))
             {
                 _metaData = MetaData.ReadFromStream(readStream);
             }
@@ -94,7 +87,7 @@ namespace PersistentQueue
 
         private long GetIndexItemOffset(long index)
         {
-            return index %  Configuration.IndexItemsPerPage * IndexItemSize;
+            return index %  Configuration.IndexItemsPerPage * _indexItemSize;
         }
 
         private long GetPreviousIndex(long index)
@@ -110,7 +103,7 @@ namespace PersistentQueue
             IndexItem indexItem;
 
             var indexPage = _indexPageFactory.GetPage(GetIndexPageIndex(index));
-            using (var stream = indexPage.GetReadStream(GetIndexItemOffset(index), IndexItemSize))
+            using (var stream = indexPage.GetReadStream(GetIndexItemOffset(index), _indexItemSize))
             {
                 indexItem = IndexItem.ReadFromStream(stream);
             }
@@ -123,7 +116,7 @@ namespace PersistentQueue
         private void PersistMetaData()
         {
             var metaPage = _metaPageFactory.GetPage(0);
-            using (var writeStream = metaPage.GetWriteStream(0, MetaDataItemSize))
+            using (var writeStream = metaPage.GetWriteStream(0, _metaDataItemSize))
             {
                 _metaData.WriteToStream(writeStream);
             }
@@ -137,10 +130,10 @@ namespace PersistentQueue
                 if (itemData == null)
                     return;
 
-                if (itemData.Length > DataPageSize)
+                if (itemData.Length > _dataPageSize)
                     throw new ArgumentOutOfRangeException("Item data length is greater than queue data page size");
 
-                if (_tailDataItemOffset + itemData.Length > DataPageSize) // Not enough space in current page
+                if (_tailDataItemOffset + itemData.Length > _dataPageSize) // Not enough space in current page
                 {
                     _tailDataPageIndex++;
                     _tailDataItemOffset = 0;
@@ -165,7 +158,7 @@ namespace PersistentQueue
 
                 // Get write stream
                 using (var writeStream =
-                    indexPage.GetWriteStream(GetIndexItemOffset(_metaData.TailIndex), IndexItemSize))
+                    indexPage.GetWriteStream(GetIndexItemOffset(_metaData.TailIndex), _indexItemSize))
                 {
                     var indexItem = new IndexItem
                     {
