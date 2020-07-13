@@ -257,11 +257,9 @@ namespace Persistent.Queue
             // Get read stream
             // Todo: Optimize: Remove copy operation
             var buffer = new byte[indexItem.ItemLength];
-            using (var memoryStream = new MemoryStream(buffer))
             using (var readStream = dataPage.GetReadStream(indexItem.ItemOffset, indexItem.ItemLength))
             {
-                readStream.CopyTo(memoryStream, 4 * 1024);
-                memoryStream.Position = 0;
+                readStream.Read(buffer, 0, (int)indexItem.ItemLength);
             }
 
             _dataPageFactory.ReleasePage(dataPage.Index);
