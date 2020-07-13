@@ -39,8 +39,11 @@ namespace Persistent.Queue.Benchmarks
         [Benchmark]
         public async Task Dequeue()
         {
-            var result = await _queue.DequeueAsync(BatchSize);
-            result.Commit();
+            while (_queue.HasItems)
+            {
+                var result = await _queue.DequeueAsync(BatchSize);
+                result.Commit();
+            }
         }
     }
 }
