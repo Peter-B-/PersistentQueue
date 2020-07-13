@@ -9,6 +9,7 @@
     <Description>A queue persisted as files that can be consumed in batches. Intended as a local buffer for IoT devices.</Description>
     <PackageProjectUrl>https://github.com/Peter-B-/PersistentQueue</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Peter-B-/PersistentQueue</RepositoryUrl>
+    <RootNamespace>Persistent.Queue</RootNamespace>
   </PropertyGroup>
 
 </Project>

@@ -2,12 +2,12 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using PersistentQueue.DataObjects;
-using PersistentQueue.Interfaces;
-using PersistentQueue.Interfaces.Intern;
-using PersistentQueue.Utils;
+using Persistent.Queue.DataObjects;
+using Persistent.Queue.Interfaces;
+using Persistent.Queue.Interfaces.Intern;
+using Persistent.Queue.Utils;
 
-namespace PersistentQueue
+namespace Persistent.Queue
 {
     public class PersistentQueue : IPersistentQueue
     {

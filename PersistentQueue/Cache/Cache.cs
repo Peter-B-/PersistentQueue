@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace PersistentQueue.Cache
+namespace Persistent.Queue.Cache
 {
     internal class Cache<TKey, TValue> : ICache<TKey, TValue> where TValue : IDisposable
     {

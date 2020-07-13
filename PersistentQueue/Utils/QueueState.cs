@@ -1,8 +1,6 @@
-﻿using System;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
-namespace PersistentQueue.Utils
+namespace Persistent.Queue.Utils
 {
     public sealed class QueueState:IQueueState
     {

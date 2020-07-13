@@ -1,4 +1,6 @@
-﻿namespace PersistentQueue.Tests
+﻿using Persistent.Queue;
+
+namespace PersistentQueue.Tests
 {
     public class UnitTestQueueConfiguration : PersistentQueueConfiguration
     {

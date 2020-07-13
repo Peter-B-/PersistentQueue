@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using PersistentQueue.Interfaces;
+using Persistent.Queue.Interfaces;
 
-namespace PersistentQueue.DataObjects
+namespace Persistent.Queue.DataObjects
 {
     internal class DequeueResult : IDequeueResult
     {

@@ -4,7 +4,7 @@ using NUnit.Framework;
 
 namespace PersistentQueue.Tests
 {
-    public class UnitTestPersistentQueue : PersistentQueue
+    public class UnitTestPersistentQueue : Persistent.Queue.PersistentQueue
     {
         public UnitTestPersistentQueue() : this(new UnitTestQueueConfiguration())
         {

@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace PersistentQueue.DataObjects
+namespace Persistent.Queue.DataObjects
 {
     internal class MetaData
     {

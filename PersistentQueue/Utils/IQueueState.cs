@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace PersistentQueue.Utils
+namespace Persistent.Queue.Utils
 {
     public interface IQueueState
     {

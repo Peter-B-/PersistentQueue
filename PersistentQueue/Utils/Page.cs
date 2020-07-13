@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using PersistentQueue.Interfaces.Intern;
+using Persistent.Queue.Interfaces.Intern;
 
-namespace PersistentQueue.Utils
+namespace Persistent.Queue.Utils
 {
     internal class Page : IPage
     {

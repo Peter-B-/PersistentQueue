@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using PersistentQueue.Utils;
+using Persistent.Queue.Utils;
 using Shouldly;
 
 namespace PersistentQueue.Tests.Utils

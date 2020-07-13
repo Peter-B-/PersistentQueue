@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace PersistentQueue.Interfaces
+namespace Persistent.Queue.Interfaces
 {
     public interface IDequeueResult
     {

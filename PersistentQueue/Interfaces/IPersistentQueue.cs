@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace PersistentQueue.Interfaces
+namespace Persistent.Queue.Interfaces
 {
     public interface IPersistentQueue : IDisposable
     {
