@@ -7,17 +7,6 @@ namespace PersistentQueue.Tests.PersistentQueueTests
     [TestFixture]
     public class HasItems
     {
-
-        [Test]
-        public void Empty_HasItemsIsFalse()
-        {
-            // Arrange
-            using var queue = new UnitTestPersistentQueue();
-
-            // Act & Assert
-            queue.HasItems.ShouldBeFalse();
-        }
-
         [Test]
         public void Empty_Enqueued()
         {
@@ -30,6 +19,16 @@ namespace PersistentQueue.Tests.PersistentQueueTests
         }
 
         [Test]
+        public void Empty_HasItemsIsFalse()
+        {
+            // Arrange
+            using var queue = new UnitTestPersistentQueue();
+
+            // Act & Assert
+            queue.HasItems.ShouldBeFalse();
+        }
+
+        [Test]
         public async Task EnqueueAndDequeue10_HasItemsFalse()
         {
             // Arrange
@@ -37,10 +36,10 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             queue.EnqueueMany(10);
 
             // Act
-            for (int i = 0; i < 5; i++)
+            for (var i = 0; i < 5; i++)
             {
                 var result = await queue.DequeueAsync(2);
-                result.Commit();                
+                result.Commit();
             }
 
             // Assert

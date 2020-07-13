@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace PersistentQueue.Cache
+namespace Persistent.Queue.Cache
 {
     internal interface ICache<TKey, TValue> where TValue : IDisposable
     {

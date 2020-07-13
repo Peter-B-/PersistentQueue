@@ -4,7 +4,7 @@ using NUnit.Framework;
 
 namespace PersistentQueue.Tests
 {
-    public class UnitTestPersistentQueue : PersistentQueue
+    public class UnitTestPersistentQueue : Persistent.Queue.PersistentQueue
     {
         public UnitTestPersistentQueue() : this(new UnitTestQueueConfiguration())
         {
@@ -14,12 +14,6 @@ namespace PersistentQueue.Tests
         {
             TestContext.WriteLine("Using path " + configuration.QueuePath);
         }
-
-        public static string GetTempPath()
-        {
-            return Path.Combine(Path.GetTempPath(), "PersistentQueue.Tests", Guid.NewGuid().ToString());
-        }
-
 
         protected override void Dispose(bool disposing)
         {
@@ -34,5 +28,5 @@ namespace PersistentQueue.Tests
             TestContext.WriteLine("Delete " + Configuration.QueuePath);
             Directory.Delete(Configuration.QueuePath, true);
         }
- }
+    }
 }

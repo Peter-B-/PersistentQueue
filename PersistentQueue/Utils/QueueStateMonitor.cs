@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 
-namespace PersistentQueue.Utils
+namespace Persistent.Queue.Utils
 {
     public sealed class QueueStateMonitor
     {
@@ -25,7 +25,7 @@ namespace PersistentQueue.Utils
                 oldState = _currentState;
                 newState = new QueueState(newTailIndex);
             } while (Interlocked.CompareExchange(ref _currentState, newState, oldState) != oldState);
-            
+
             oldState?.Update(newState);
         }
 

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace PersistentQueue
+namespace Persistent.Queue.Interfaces.Intern
 {
     internal interface IPageFactory : IDisposable
     {

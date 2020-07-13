@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace PersistentQueue
+namespace Persistent.Queue.DataObjects
 {
     internal class IndexItem
     {
@@ -38,6 +38,11 @@ namespace PersistentQueue
         public static long Size()
         {
             return 3 * sizeof(long);
+        }
+
+        public override string ToString()
+        {
+            return $"Page {DataPageIndex}, @ {ItemOffset}, {ItemLength} bytes";
         }
     }
 }

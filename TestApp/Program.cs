@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Persistent.Queue;
+using Persistent.Queue.Extensions;
 
 namespace TestApp
 {
@@ -12,7 +12,8 @@ namespace TestApp
     {
         private static async Task Main(string[] args)
         {
-            var q = new PersistentQueue.PersistentQueue(@"c:\temp\PersistentQueue", 10 * 1024 * 1024);
+            using var q = new PersistentQueue(@"C:\temp\PersistentQueue", 10 * 1024 * 1024);
+    
             var items = 25000;
             var threads = 5;
 
@@ -56,10 +57,9 @@ namespace TestApp
 
 
             var count = 0;
-            while (true)
+            while (q.HasItems)
             {
                 var dequeueTask = q.DequeueAsync(100);
-                if (!dequeueTask.IsCompleted) break;
                 var res = await dequeueTask;
                 foreach (var memory in res.Data)
                 {
@@ -69,14 +69,13 @@ namespace TestApp
 
                 res.Commit();
             }
-            
+
 
             swOuter.Stop();
             Console.WriteLine("Read {0} items in {1} ms ({2:0} items/s)",
                 count,
                 swOuter.ElapsedMilliseconds,
-                (double)count / swOuter.ElapsedMilliseconds * 1000);
+                (double) count / swOuter.ElapsedMilliseconds * 1000);
         }
-
     }
 }

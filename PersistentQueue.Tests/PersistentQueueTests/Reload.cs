@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using System.IO;
+﻿using System.IO;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Shouldly;
@@ -23,21 +22,21 @@ namespace PersistentQueue.Tests.PersistentQueueTests
         [TestCase(10, 10, 30, 128)]
         public async Task ReloadWithData(int firstDequeue, int secondDequeue, int indexItemsPerPage = 30, int dataPageSize = 32 * 10)
         {
-            var config = new UnitTestQueueConfiguration()
+            var config = new UnitTestQueueConfiguration
             {
                 IndexItemsPerPage = indexItemsPerPage,
                 DataPageSize = dataPageSize
             };
             try
             {
-                using (var q1 = new PersistentQueue(config))
+                using (var q1 = new Persistent.Queue.PersistentQueue(config))
                 {
                     q1.EnqueueManySized(10, 32);
                     var result = await q1.DequeueAsync(firstDequeue);
                     result.Commit();
                 }
 
-                using (var q2 = new PersistentQueue(config))
+                using (var q2 = new Persistent.Queue.PersistentQueue(config))
                 {
                     q2.EnqueueManySized(10, 32);
                     var result = await q2.DequeueAsync(secondDequeue);

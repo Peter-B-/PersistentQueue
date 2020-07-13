@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using PersistentQueue.Utils;
+using Persistent.Queue.Utils;
 using Shouldly;
 
 namespace PersistentQueue.Tests.Utils
@@ -54,7 +54,8 @@ namespace PersistentQueue.Tests.Utils
         public void ShouldContinueOnOtherThread()
         {
             // Arrange
-            var sut =  QueueStateMonitor.Initialize(0);;
+            var sut = QueueStateMonitor.Initialize(0);
+            ;
 
             var pulseThreadId = Thread.CurrentThread.ManagedThreadId;
 

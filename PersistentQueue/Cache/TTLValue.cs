@@ -1,4 +1,4 @@
-﻿namespace PersistentQueue.Cache
+﻿namespace Persistent.Queue.Cache
 {
     internal class TTLValue
     {

@@ -1,31 +1,39 @@
 ﻿using System.IO;
 
-namespace PersistentQueue
+namespace Persistent.Queue
 {
     public class PersistentQueueConfiguration
     {
-        public string QueuePath { get; set; }
+        public PersistentQueueConfiguration(string queuePath, long? dataPageSize = null)
+        {
+            QueuePath = queuePath;
+            DataPageSize = dataPageSize ?? DefaultDataPageSize;
+        }
+
+        public string QueuePath { get; }
         public string MetaPageFolder { get; set; } = "meta";
         public string IndexPageFolder { get; set; } = "index";
         public string DataPageFolder { get; set; } = "data";
 
         // Index pages
         public long IndexItemsPerPage { get; set; } = 50000;
-        public long DataPageSize { get; set; } = DefaultDataPageSize;
+        public long DataPageSize { get; set; }
 
         public static long DefaultDataPageSize { get; } = 128 * 1024 * 1024;
-        
-        public string GetMetaPath() => Path.Combine(QueuePath, MetaPageFolder);
-        public string GetIndexPath() => Path.Combine(QueuePath, IndexPageFolder);
-        public string GetDataPath() => Path.Combine(QueuePath, DataPageFolder);
 
-        public static PersistentQueueConfiguration GetDefault(string queuePath, long? dataPageSize = null)
+        public string GetMetaPath()
         {
-            return new PersistentQueueConfiguration
-            {
-                QueuePath = queuePath,
-                DataPageSize = dataPageSize ?? DefaultDataPageSize
-            };
+            return Path.Combine(QueuePath, MetaPageFolder);
+        }
+
+        public string GetIndexPath()
+        {
+            return Path.Combine(QueuePath, IndexPageFolder);
+        }
+
+        public string GetDataPath()
+        {
+            return Path.Combine(QueuePath, DataPageFolder);
         }
     }
 }
