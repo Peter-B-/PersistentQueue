@@ -15,10 +15,10 @@ namespace Persistent.Queue.DataObjects
             _itemRange = itemRange;
             _commitCallBack = commitCallBack;
             _rejectCallBack = rejectCallBack;
-            Data = data;
+            Items = data;
         }
 
-        public IReadOnlyList<Memory<byte>> Data { get; }
+        public IReadOnlyList<Memory<byte>> Items { get; }
 
         public void Commit()
         {

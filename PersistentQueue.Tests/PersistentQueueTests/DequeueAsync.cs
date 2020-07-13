@@ -20,7 +20,7 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             queue.Enqueue(1);
             var result = await resultTask;
 
-            result.Data.Count.ShouldBe(1);
+            result.Items.Count.ShouldBe(1);
         }
 
         [Test]
@@ -34,7 +34,7 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             var result = await queue.DequeueAsync(2);
 
             // Assert
-            result.Data.Count.ShouldBe(2);
+            result.Items.Count.ShouldBe(2);
         }
 
         [Test]
@@ -62,7 +62,7 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             var result = await queue.DequeueAsync(10);
 
             // Assert
-            result.Data.Count.ShouldBe(2);
+            result.Items.Count.ShouldBe(2);
         }
 
 

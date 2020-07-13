@@ -4,7 +4,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>8.0</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.1.1</Version>
+    <Version>0.1.2</Version>
     <Authors>Peter-B-</Authors>
     <Description>A queue persisted as files that can be consumed in batches. Intended as a local buffer for IoT devices.</Description>
     <PackageProjectUrl>https://github.com/Peter-B-/PersistentQueue</PackageProjectUrl>

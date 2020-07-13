@@ -23,7 +23,7 @@ namespace PersistentQueue.Tests.PersistentQueueTests
         private static async Task Dequeue(UnitTestPersistentQueue queue, int elements)
         {
             var result = await queue.DequeueAsync(elements);
-            result.Data.Count.ShouldBe(elements);
+            result.Items.Count.ShouldBe(elements);
             result.Commit();
         }
 
