@@ -7,7 +7,7 @@ namespace Persistent.Queue.Benchmarks
     {
         private PersistentQueue _queue;
 
-        [Params(10000)]
+        [Params(1000)]
         public int EnqueueCount { get; set; }
 
         [Params(1, 100)]

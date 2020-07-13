@@ -10,27 +10,21 @@ namespace Persistent.Queue.DataObjects
 
         public void WriteToStream(Stream s)
         {
-            using (var bw = new BinaryWriter(s))
-            {
-                bw.Write(DataPageIndex);
-                bw.Write(ItemOffset);
-                bw.Write(ItemLength);
-                //bw.Flush();
-            }
+            using var bw = new BinaryWriter(s);
+            bw.Write(DataPageIndex);
+            bw.Write(ItemOffset);
+            bw.Write(ItemLength);
         }
 
         public static IndexItem ReadFromStream(Stream s)
         {
-            IndexItem ret = null;
-            using (var br = new BinaryReader(s))
+            using var br = new BinaryReader(s);
+            var ret = new IndexItem
             {
-                ret = new IndexItem
-                {
-                    DataPageIndex = br.ReadInt64(),
-                    ItemOffset = br.ReadInt64(),
-                    ItemLength = br.ReadInt64()
-                };
-            }
+                DataPageIndex = br.ReadInt64(),
+                ItemOffset = br.ReadInt64(),
+                ItemLength = br.ReadInt64()
+            };
 
             return ret;
         }
