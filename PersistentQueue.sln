@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "TestApp\TestApp.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistentQueue.Tests", "PersistentQueue.Tests\PersistentQueue.Tests.csproj", "{5A37513E-2A92-4CF6-8379-F62EE6D0A15D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistentQueue.Benchmarks", "PersistentQueue.Benchmarks\PersistentQueue.Benchmarks.csproj", "{8D8B6EB2-6FF3-4C66-BE01-72635657679C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{5A37513E-2A92-4CF6-8379-F62EE6D0A15D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5A37513E-2A92-4CF6-8379-F62EE6D0A15D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5A37513E-2A92-4CF6-8379-F62EE6D0A15D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D8B6EB2-6FF3-4C66-BE01-72635657679C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D8B6EB2-6FF3-4C66-BE01-72635657679C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D8B6EB2-6FF3-4C66-BE01-72635657679C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D8B6EB2-6FF3-4C66-BE01-72635657679C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
