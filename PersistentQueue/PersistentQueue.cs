@@ -32,12 +32,11 @@ namespace Persistent.Queue
         // Tail info
         private long _tailDataPageIndex;
 
-        public PersistentQueue(string queuePath) : this(PersistentQueueConfiguration.GetDefault(queuePath))
+        public PersistentQueue(string queuePath) : this(new PersistentQueueConfiguration(queuePath))
         {
         }
 
-        public PersistentQueue(string queuePath, long dataPageSize) : this(
-            PersistentQueueConfiguration.GetDefault(queuePath, dataPageSize))
+        public PersistentQueue(string queuePath, long dataPageSize) : this(new PersistentQueueConfiguration(queuePath, dataPageSize))
         {
         }
 

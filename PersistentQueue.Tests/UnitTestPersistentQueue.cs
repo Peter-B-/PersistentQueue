@@ -15,12 +15,6 @@ namespace PersistentQueue.Tests
             TestContext.WriteLine("Using path " + configuration.QueuePath);
         }
 
-        public static string GetTempPath()
-        {
-            return Path.Combine(Path.GetTempPath(), "PersistentQueue.Tests", Guid.NewGuid().ToString());
-        }
-
-
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);

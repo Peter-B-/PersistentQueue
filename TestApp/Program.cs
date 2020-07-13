@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
 using Persistent.Queue;
+using Persistent.Queue.Extensions;
 
 namespace TestApp
 {
@@ -11,7 +12,8 @@ namespace TestApp
     {
         private static async Task Main(string[] args)
         {
-            var q = new PersistentQueue(@"c:\temp\PersistentQueue", 10 * 1024 * 1024);
+            using var q = new PersistentQueue(@"C:\temp\PersistentQueue", 10 * 1024 * 1024);
+    
             var items = 25000;
             var threads = 5;
 
