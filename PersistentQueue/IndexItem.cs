@@ -39,5 +39,7 @@ namespace PersistentQueue
         {
             return 3 * sizeof(long);
         }
+
+        public override string ToString() => $"Page {DataPageIndex}, @ {ItemOffset}, {ItemLength} bytes";
     }
 }
