@@ -18,15 +18,15 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             var results1 = await queue.DequeueAsync(2);
             var results2 = await queue.DequeueAsync(2);
             var results3 = await queue.DequeueAsync(2);
-            
+
             // Assert
             results1.Data.Count.ShouldBe(2);
             results2.Data.Count.ShouldBe(2);
             results3.Data.Count.ShouldBe(2);
-            
-            CollectionAssert.AreEqual(results1.Data[0].ToArray(),results3.Data[0].ToArray());
+
+            CollectionAssert.AreEqual(results1.Data[0].ToArray(), results3.Data[0].ToArray());
         }
-        
+
         [Test]
         public async Task WithCommit_NewElementsAreReturned()
         {
@@ -37,14 +37,14 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             // Act
             var results1 = await queue.DequeueAsync(2);
             results1.Commit();
-            
+
             var results2 = await queue.DequeueAsync(2);
-            
+
             // Assert
             results1.Data.Count.ShouldBe(2);
             results2.Data.Count.ShouldBe(2);
-            
-            CollectionAssert.AreNotEqual(results1.Data[0].ToArray(),results2.Data[0].ToArray());
+
+            CollectionAssert.AreNotEqual(results1.Data[0].ToArray(), results2.Data[0].ToArray());
         }
     }
 }

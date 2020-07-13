@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Persistent.Queue;
@@ -69,14 +67,13 @@ namespace TestApp
 
                 res.Commit();
             }
-            
+
 
             swOuter.Stop();
             Console.WriteLine("Read {0} items in {1} ms ({2:0} items/s)",
                 count,
                 swOuter.ElapsedMilliseconds,
-                (double)count / swOuter.ElapsedMilliseconds * 1000);
+                (double) count / swOuter.ElapsedMilliseconds * 1000);
         }
-
     }
 }

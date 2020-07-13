@@ -40,6 +40,9 @@ namespace Persistent.Queue.DataObjects
             return 3 * sizeof(long);
         }
 
-        public override string ToString() => $"Page {DataPageIndex}, @ {ItemOffset}, {ItemLength} bytes";
+        public override string ToString()
+        {
+            return $"Page {DataPageIndex}, @ {ItemOffset}, {ItemLength} bytes";
+        }
     }
 }

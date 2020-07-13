@@ -34,5 +34,5 @@ namespace PersistentQueue.Tests
             TestContext.WriteLine("Delete " + Configuration.QueuePath);
             Directory.Delete(Configuration.QueuePath, true);
         }
- }
+    }
 }

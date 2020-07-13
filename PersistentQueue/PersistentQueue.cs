@@ -11,20 +11,19 @@ namespace Persistent.Queue
 {
     public class PersistentQueue : IPersistentQueue
     {
-        protected readonly PersistentQueueConfiguration Configuration;
-        private readonly object _lockObject = new object();
-
-        private readonly QueueStateMonitor _queueMonitor;
+        // Page factories
+        private readonly IPageFactory _dataPageFactory;
 
         // Data pages
         private readonly long _dataPageSize;
         private readonly long _indexItemSize;
-        private readonly long _metaDataItemSize;
-
-        // Page factories
-        private readonly IPageFactory _dataPageFactory;
         private readonly IPageFactory _indexPageFactory;
+        private readonly object _lockObject = new object();
+        private readonly long _metaDataItemSize;
         private readonly IPageFactory _metaPageFactory;
+
+        private readonly QueueStateMonitor _queueMonitor;
+        protected readonly PersistentQueueConfiguration Configuration;
 
         // MetaData
         private MetaData _metaData;
@@ -37,7 +36,8 @@ namespace Persistent.Queue
         {
         }
 
-        public PersistentQueue(string queuePath, long dataPageSize) : this(PersistentQueueConfiguration.GetDefault(queuePath, dataPageSize))
+        public PersistentQueue(string queuePath, long dataPageSize) : this(
+            PersistentQueueConfiguration.GetDefault(queuePath, dataPageSize))
         {
         }
 
@@ -61,68 +61,12 @@ namespace Persistent.Queue
             _queueMonitor = QueueStateMonitor.Initialize(_metaData.TailIndex);
         }
 
-        public bool HasItems => (_metaData.TailIndex - _metaData.HeadIndex) > 0;
+        public bool HasItems => _metaData.TailIndex - _metaData.HeadIndex > 0;
+
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
-        }
-
-        private void InitializeMetaData()
-        {
-            var metaPage = _metaPageFactory.GetPage(0);
-            using (var readStream = metaPage.GetReadStream(0, _metaDataItemSize))
-            {
-                _metaData = MetaData.ReadFromStream(readStream);
-            }
-
-            // Update local data pointers from previously persisted index item
-            var prevTailIndex = GetPreviousIndex(_metaData.TailIndex);
-            var prevTailIndexItem = GetIndexItem(prevTailIndex);
-            _tailDataPageIndex = prevTailIndexItem.DataPageIndex;
-            _tailDataItemOffset = prevTailIndexItem.ItemOffset + prevTailIndexItem.ItemLength;
-        }
-
-        private long GetIndexPageIndex(long index)
-        {
-            return index / Configuration.IndexItemsPerPage;
-        }
-
-        private long GetIndexItemOffset(long index)
-        {
-            return index %  Configuration.IndexItemsPerPage * _indexItemSize;
-        }
-
-        private long GetPreviousIndex(long index)
-        {
-            if (index > 0)
-                return index - 1;
-
-            return index;
-        }
-
-        private IndexItem GetIndexItem(long index)
-        {
-            IndexItem indexItem;
-
-            var indexPage = _indexPageFactory.GetPage(GetIndexPageIndex(index));
-            using (var stream = indexPage.GetReadStream(GetIndexItemOffset(index), _indexItemSize))
-            {
-                indexItem = IndexItem.ReadFromStream(stream);
-            }
-
-            _indexPageFactory.ReleasePage(indexPage.Index);
-
-            return indexItem;
-        }
-
-        private void PersistMetaData()
-        {
-            var metaPage = _metaPageFactory.GetPage(0);
-            using (var writeStream = metaPage.GetWriteStream(0, _metaDataItemSize))
-            {
-                _metaData.WriteToStream(writeStream);
-            }
         }
 
         public void Enqueue(ReadOnlySpan<byte> itemData)
@@ -208,6 +152,63 @@ namespace Persistent.Queue
             return result;
         }
 
+        private void InitializeMetaData()
+        {
+            var metaPage = _metaPageFactory.GetPage(0);
+            using (var readStream = metaPage.GetReadStream(0, _metaDataItemSize))
+            {
+                _metaData = MetaData.ReadFromStream(readStream);
+            }
+
+            // Update local data pointers from previously persisted index item
+            var prevTailIndex = GetPreviousIndex(_metaData.TailIndex);
+            var prevTailIndexItem = GetIndexItem(prevTailIndex);
+            _tailDataPageIndex = prevTailIndexItem.DataPageIndex;
+            _tailDataItemOffset = prevTailIndexItem.ItemOffset + prevTailIndexItem.ItemLength;
+        }
+
+        private long GetIndexPageIndex(long index)
+        {
+            return index / Configuration.IndexItemsPerPage;
+        }
+
+        private long GetIndexItemOffset(long index)
+        {
+            return index % Configuration.IndexItemsPerPage * _indexItemSize;
+        }
+
+        private long GetPreviousIndex(long index)
+        {
+            if (index > 0)
+                return index - 1;
+
+            return index;
+        }
+
+        private IndexItem GetIndexItem(long index)
+        {
+            IndexItem indexItem;
+
+            var indexPage = _indexPageFactory.GetPage(GetIndexPageIndex(index));
+            using (var stream = indexPage.GetReadStream(GetIndexItemOffset(index), _indexItemSize))
+            {
+                indexItem = IndexItem.ReadFromStream(stream);
+            }
+
+            _indexPageFactory.ReleasePage(indexPage.Index);
+
+            return indexItem;
+        }
+
+        private void PersistMetaData()
+        {
+            var metaPage = _metaPageFactory.GetPage(0);
+            using (var writeStream = metaPage.GetWriteStream(0, _metaDataItemSize))
+            {
+                _metaData.WriteToStream(writeStream);
+            }
+        }
+
         private void RejectBatch(ItemRange range)
         {
         }
@@ -234,10 +235,14 @@ namespace Persistent.Queue
                 var oldHeadIndexItem = GetIndexItem(lastHeadIndex);
                 var lastWrittenIndexItem = GetIndexItem(lastWrittenIndex);
 
-                for (var dataPageIndex = oldHeadIndexItem.DataPageIndex; dataPageIndex < lastWrittenIndexItem.DataPageIndex; dataPageIndex++)
+                for (var dataPageIndex = oldHeadIndexItem.DataPageIndex;
+                    dataPageIndex < lastWrittenIndexItem.DataPageIndex;
+                    dataPageIndex++)
                     _dataPageFactory.DeletePage(dataPageIndex);
 
-                for (var indexPageIndex = GetIndexPageIndex(lastHeadIndex); indexPageIndex < GetIndexPageIndex(lastWrittenIndex); indexPageIndex++)
+                for (var indexPageIndex = GetIndexPageIndex(lastHeadIndex);
+                    indexPageIndex < GetIndexPageIndex(lastWrittenIndex);
+                    indexPageIndex++)
                     _indexPageFactory.DeletePage(indexPageIndex);
             }
         }

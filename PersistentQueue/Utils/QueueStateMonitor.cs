@@ -25,7 +25,7 @@ namespace Persistent.Queue.Utils
                 oldState = _currentState;
                 newState = new QueueState(newTailIndex);
             } while (Interlocked.CompareExchange(ref _currentState, newState, oldState) != oldState);
-            
+
             oldState?.Update(newState);
         }
 

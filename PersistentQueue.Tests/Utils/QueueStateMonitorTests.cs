@@ -54,7 +54,8 @@ namespace PersistentQueue.Tests.Utils
         public void ShouldContinueOnOtherThread()
         {
             // Arrange
-            var sut =  QueueStateMonitor.Initialize(0);;
+            var sut = QueueStateMonitor.Initialize(0);
+            ;
 
             var pulseThreadId = Thread.CurrentThread.ManagedThreadId;
 

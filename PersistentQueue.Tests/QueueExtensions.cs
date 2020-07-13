@@ -1,13 +1,11 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Text;
 
 namespace PersistentQueue.Tests
 {
     public static class QueueExtensions
     {
-
-        public static void Enqueue(this Persistent.Queue.PersistentQueue queue,int itemNo)
+        public static void Enqueue(this Persistent.Queue.PersistentQueue queue, int itemNo)
         {
             var s = Encoding.UTF8.GetBytes($"Message {itemNo}");
             queue.Enqueue(s);
@@ -24,6 +22,5 @@ namespace PersistentQueue.Tests
             Enumerable.Range(1, count)
                 .ForEach(_ => queue.Enqueue(new byte[byteSize]));
         }
-
     }
 }
