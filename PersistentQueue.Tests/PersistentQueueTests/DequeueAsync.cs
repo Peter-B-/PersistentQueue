@@ -65,5 +65,23 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             result.Data.Count.ShouldBe(2);
         }
 
+        
+        [Test]
+        public void WaitForMinElements()
+        {
+            // Arrange
+            using var queue = new UnitTestPersistentQueue();
+
+            // Act & Assert
+            var resultTask =  queue.DequeueAsync(12, 10);
+            for (var i = 0; i < 4; i++)
+            {
+                queue.EnqueueMany(2);
+                resultTask.IsCompleted.ShouldBeFalse();
+            }
+            
+            queue.EnqueueMany(2);
+            resultTask.IsCompleted.ShouldBeTrue();
+        }
     }
 }

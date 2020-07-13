@@ -189,13 +189,13 @@ namespace PersistentQueue
             }
         }
 
-        public async Task<IDequeueResult> DequeueAsync(int maxElements)
+        public async Task<IDequeueResult> DequeueAsync(int maxElements, int minElements = 1)
         {
             var queueState = _queueMonitor.GetCurrent();
 
             var headIndex = _metaData.HeadIndex;
 
-            while (headIndex == queueState.TailIndex)
+            while (queueState.TailIndex - headIndex < minElements)
                 queueState = await queueState.NextUpdate.ConfigureAwait(false);
 
             var availableElements = queueState.TailIndex - headIndex;
