@@ -1,8 +1,9 @@
 ﻿using System;
 using System.IO;
 using PersistentQueue.Cache;
+using PersistentQueue.Interfaces.Intern;
 
-namespace PersistentQueue
+namespace PersistentQueue.Utils
 {
     internal class PageFactory : IPageFactory
     {

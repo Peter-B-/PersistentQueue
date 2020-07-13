@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace PersistentQueue
+namespace PersistentQueue.Interfaces.Intern
 {
     internal interface IPage : IDisposable
     {

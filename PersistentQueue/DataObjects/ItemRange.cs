@@ -1,4 +1,4 @@
-﻿namespace PersistentQueue
+﻿namespace PersistentQueue.DataObjects
 {
     internal readonly struct ItemRange
     {

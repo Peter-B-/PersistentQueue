@@ -2,11 +2,14 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using PersistentQueue.DataObjects;
+using PersistentQueue.Interfaces;
+using PersistentQueue.Interfaces.Intern;
 using PersistentQueue.Utils;
 
 namespace PersistentQueue
 {
-    public class PersistentQueue : IDisposable
+    public class PersistentQueue : IPersistentQueue
     {
         protected readonly PersistentQueueConfiguration Configuration;
         private readonly object _lockObject = new object();
