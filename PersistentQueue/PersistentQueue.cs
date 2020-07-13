@@ -77,7 +77,7 @@ namespace Persistent.Queue
                     return;
 
                 if (itemData.Length > _dataPageSize)
-                    throw new ArgumentOutOfRangeException("Item data length is greater than queue data page size");
+                    throw new ArgumentOutOfRangeException(nameof(itemData), "Item data length is greater than queue data page size");
 
                 if (_tailDataItemOffset + itemData.Length > _dataPageSize) // Not enough space in current page
                 {
