@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Shouldly;
 
@@ -14,7 +16,7 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             using var queue = new UnitTestPersistentQueue();
 
             // Act & Assert
-            var resultTask = queue.DequeueAsync(2);
+            var resultTask = queue.DequeueAsync(1, 2);
             resultTask.IsCompleted.ShouldBeFalse();
 
             queue.Enqueue(1);
@@ -31,7 +33,7 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             queue.EnqueueMany(2);
 
             // Act
-            var result = await queue.DequeueAsync(2);
+            var result = await queue.DequeueAsync(1, 2);
 
             // Assert
             result.Items.Count.ShouldBe(2);
@@ -45,7 +47,7 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             queue.EnqueueMany(2);
 
             // Act
-            var resultTask = queue.DequeueAsync(2);
+            var resultTask = queue.DequeueAsync(1, 2);
 
             // Assert
             resultTask.IsCompleted.ShouldBeTrue();
@@ -59,7 +61,7 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             queue.EnqueueMany(2);
 
             // Act
-            var result = await queue.DequeueAsync(10);
+            var result = await queue.DequeueAsync(1, 10);
 
             // Assert
             result.Items.Count.ShouldBe(2);
@@ -73,7 +75,7 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             using var queue = new UnitTestPersistentQueue();
 
             // Act & Assert
-            var resultTask = queue.DequeueAsync(12, 10);
+            var resultTask = queue.DequeueAsync(10, 12);
             for (var i = 0; i < 4; i++)
             {
                 queue.EnqueueMany(2);
@@ -82,6 +84,38 @@ namespace PersistentQueue.Tests.PersistentQueueTests
 
             queue.EnqueueMany(2);
             resultTask.IsCompleted.ShouldBeTrue();
+        }
+
+        [Test]
+        public void WaitAndCancel()
+        {
+            // Arrange
+            using var queue = new UnitTestPersistentQueue();
+
+            var cts = new CancellationTokenSource();
+
+            // Act & Assert
+            var resultTask = queue.DequeueAsync(10, 12, cts.Token);
+            resultTask.IsCompleted.ShouldBeFalse();
+            resultTask.IsCanceled.ShouldBeFalse();
+
+            cts.Cancel();
+            resultTask.IsCanceled.ShouldBeTrue();
+        }
+
+        [Test]
+        public void Cancel_ShouldThrowException()
+        {
+            // Arrange
+            using var queue = new UnitTestPersistentQueue();
+
+            var cts = new CancellationTokenSource();
+
+            // Act & Assert
+            var resultTask = queue.DequeueAsync(10, 12, cts.Token);
+
+            cts.Cancel();
+            Should.ThrowAsync<OperationCanceledException>(async () => await resultTask);
         }
     }
 }

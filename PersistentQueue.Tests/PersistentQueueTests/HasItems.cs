@@ -38,7 +38,7 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             // Act
             for (var i = 0; i < 5; i++)
             {
-                var result = await queue.DequeueAsync(2);
+                var result = await queue.DequeueAsync(1, 2);
                 result.Commit();
             }
 

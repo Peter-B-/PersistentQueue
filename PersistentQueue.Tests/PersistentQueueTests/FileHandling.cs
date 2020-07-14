@@ -22,7 +22,7 @@ namespace PersistentQueue.Tests.PersistentQueueTests
 
         private static async Task Dequeue(UnitTestPersistentQueue queue, int elements)
         {
-            var result = await queue.DequeueAsync(elements);
+            var result = await queue.DequeueAsync(1, elements);
             result.Items.Count.ShouldBe(elements);
             result.Commit();
         }
@@ -179,7 +179,7 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             queue.EnqueueMany(20);
             Directory.GetFiles(config.GetIndexPath()).Length.ShouldBe(10);
 
-            var result = await queue.DequeueAsync(10);
+            var result = await queue.DequeueAsync(1, 10);
             result.Commit();
             Directory.GetFiles(config.GetIndexPath()).Length.ShouldBe(6);
         }

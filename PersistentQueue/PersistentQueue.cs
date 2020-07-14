@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Nito.AsyncEx;
 using Persistent.Queue.DataObjects;
 using Persistent.Queue.Interfaces;
 using Persistent.Queue.Interfaces.Intern;
@@ -128,14 +130,24 @@ namespace Persistent.Queue
             }
         }
 
-        public async Task<IDequeueResult> DequeueAsync(int maxItems, int minItems = 1)
+        public Task<IDequeueResult> DequeueAsync(CancellationToken token = default)
         {
+            return DequeueAsync(Configuration.MinDequeueBatchSize, Configuration.MaxDequeueBatchSize, token);
+        }
+
+        public async Task<IDequeueResult> DequeueAsync(int minItems, int maxItems, CancellationToken token = default)
+        {
+            if (minItems < 1) minItems = 1;
+            if (maxItems < minItems) maxItems = minItems;
+
             var queueState = _queueMonitor.GetCurrent();
 
             var headIndex = _metaData.HeadIndex;
 
             while (queueState.TailIndex - headIndex < minItems)
-                queueState = await queueState.NextUpdate.ConfigureAwait(false);
+                queueState = await queueState.NextUpdate
+                    .WaitAsync(token)
+                    .ConfigureAwait(false);
 
             var availableElements = queueState.TailIndex - headIndex;
             var noOfItems = (int) Math.Min(availableElements, maxItems);

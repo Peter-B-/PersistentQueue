@@ -21,6 +21,9 @@ namespace Persistent.Queue
 
         public static long DefaultDataPageSize { get; } = 128 * 1024 * 1024;
 
+        public int MinDequeueBatchSize { get; set; } = 1;
+        public int MaxDequeueBatchSize { get; set; } = 100;
+
         public string GetMetaPath() => Path.Combine(QueuePath, MetaPageFolder);
         public string GetIndexPath() => Path.Combine(QueuePath, IndexPageFolder);
         public string GetDataPath() => Path.Combine(QueuePath, DataPageFolder);

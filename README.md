@@ -22,7 +22,7 @@ queue.Enqueue(Encoding.UTF8.GetBytes("A second item"));
 
 // Dequeue up to 10 items
 // Will return immediatelly, since more than minItems are in the queue
-var result = await queue.DequeueAsync(maxItems: 10, minItems: 1);
+var result = await queue.DequeueAsync(minItems: 1, maxItems: 10);
 
 var messages =
     result.Items
@@ -59,6 +59,14 @@ public interface IDequeueResult
 `Items` contains the items to be consumed. If the items were passed on successfully, `.Commit()` must be called, which marks all items
 of the batch as processed and deletes them from the file system. If `.Commit()` is not called on the `IDequeueResult`, subsequent calls to
 `.DequeueAsync()` will return the same items again.
+
+## Example
+
+There is a [LinqPad](https://www.linqpad.net/) example on how to use the library at `Examples/Send to IoT Hub with PersistentQueue.linq`.
+
+It consists of two loops running in parallel:
+ - `EnqueueMessages` enqueues serialized messages into a persistent queue.
+ - `SendLoop` does dequeue batches of messages, sends them to an [Azure IoT Hub](https://azure.microsoft.com/en-us/services/iot-hub/), if successful, commits them.
 
 ## Credits
 

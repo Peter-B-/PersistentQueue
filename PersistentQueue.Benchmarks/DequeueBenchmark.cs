@@ -41,7 +41,7 @@ namespace Persistent.Queue.Benchmarks
         {
             while (_queue.HasItems)
             {
-                var result = await _queue.DequeueAsync(BatchSize);
+                var result = await _queue.DequeueAsync(1, BatchSize);
                 result.Commit();
             }
         }
