@@ -132,14 +132,14 @@ namespace Persistent.Queue
 
         public Task<IDequeueResult> DequeueAsync(CancellationToken token = default)
         {
-            return DequeueAsync(Configuration.MaxDequeueBatchSize, Configuration.MinDequeueBatchSize, token);
+            return DequeueAsync(Configuration.MinDequeueBatchSize, Configuration.MaxDequeueBatchSize, token);
         }
 
-        public async Task<IDequeueResult> DequeueAsync(int maxItems, int minItems, CancellationToken token = default)
+        public async Task<IDequeueResult> DequeueAsync(int minItems, int maxItems, CancellationToken token = default)
         {
             if (minItems < 1) minItems = 1;
             if (maxItems < minItems) maxItems = minItems;
-            
+
             var queueState = _queueMonitor.GetCurrent();
 
             var headIndex = _metaData.HeadIndex;
