@@ -62,7 +62,7 @@ of the batch as processed and deletes them from the file system. If `.Commit()` 
 
 ## Example
 
-There is a [LinqPad](https://www.linqpad.net/) example on how to use the library at `Examples/Send to IoT Hub with PersistentQueue.linq`.
+There is a [LinqPad](https://www.linqpad.net/) example on how to use the library at [Examples/Send to IoT Hub with PersistentQueue.linq](Examples/Send%20to%20IoT%20Hub%20with%20PersistentQueue.linq).
 
 It consists of two loops running in parallel:
  - `EnqueueMessages` enqueues serialized messages into a persistent queue.

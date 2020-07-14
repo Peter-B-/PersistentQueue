@@ -20,9 +20,24 @@ async Task Main()
 	var sendLoopTask = Task.Run(() => SendLoop(queue));
 	var messageCreateTask = Task.Run(() => EnqueueMessages(queue));
 
-	await sendLoopTask;
-	await messageCreateTask;
-	
+	try
+	{
+		await sendLoopTask;
+	}
+	catch (TaskCanceledException)
+	{	
+		"Sendloop stopped".Dump();
+	}
+
+	try
+	{
+		await messageCreateTask;
+	}
+	catch (TaskCanceledException)
+	{
+		"Message creation stopped".Dump();
+	}
+
 	"Done".Dump();
 }
 
