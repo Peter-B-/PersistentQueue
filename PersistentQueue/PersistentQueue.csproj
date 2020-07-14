@@ -3,16 +3,16 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>8.0</LangVersion>
-
+    <RootNamespace>Persistent.Queue</RootNamespace>
 
     <!-- Nuget -->
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Version>0.1.0</Version>
     <Authors>Peter-B-</Authors>
-    <Description>A queue persisted as files that can be consumed in batches. Intended as a local buffer for IoT devices.</Description>
+    <Description>A queue, persisted in local files, that can be consumed in batches. Intended as a local buffer for IoT devices.</Description>
     <PackageProjectUrl>https://github.com/Peter-B-/PersistentQueue</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Peter-B-/PersistentQueue</RepositoryUrl>
-    <RootNamespace>Persistent.Queue</RootNamespace>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
 
     <!-- Source Link integration -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
