@@ -16,7 +16,7 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             using var queue = new UnitTestPersistentQueue();
 
             // Act & Assert
-            var resultTask = queue.DequeueAsync(2);
+            var resultTask = queue.DequeueAsync(2, 1);
             resultTask.IsCompleted.ShouldBeFalse();
 
             queue.Enqueue(1);
@@ -33,7 +33,7 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             queue.EnqueueMany(2);
 
             // Act
-            var result = await queue.DequeueAsync(2);
+            var result = await queue.DequeueAsync(2, 1);
 
             // Assert
             result.Items.Count.ShouldBe(2);
@@ -47,7 +47,7 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             queue.EnqueueMany(2);
 
             // Act
-            var resultTask = queue.DequeueAsync(2);
+            var resultTask = queue.DequeueAsync(2, 1);
 
             // Assert
             resultTask.IsCompleted.ShouldBeTrue();
@@ -61,7 +61,7 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             queue.EnqueueMany(2);
 
             // Act
-            var result = await queue.DequeueAsync(10);
+            var result = await queue.DequeueAsync(10, 1);
 
             // Assert
             result.Items.Count.ShouldBe(2);

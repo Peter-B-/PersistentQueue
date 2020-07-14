@@ -137,6 +137,9 @@ namespace Persistent.Queue
 
         public async Task<IDequeueResult> DequeueAsync(int maxItems, int minItems, CancellationToken token = default)
         {
+            if (minItems < 1) minItems = 1;
+            if (maxItems < minItems) maxItems = minItems;
+            
             var queueState = _queueMonitor.GetCurrent();
 
             var headIndex = _metaData.HeadIndex;

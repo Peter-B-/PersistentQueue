@@ -32,14 +32,14 @@ namespace PersistentQueue.Tests.PersistentQueueTests
                 using (var q1 = new Persistent.Queue.PersistentQueue(config))
                 {
                     q1.EnqueueManySized(10, 32);
-                    var result = await q1.DequeueAsync(firstDequeue);
+                    var result = await q1.DequeueAsync(firstDequeue, 1);
                     result.Commit();
                 }
 
                 using (var q2 = new Persistent.Queue.PersistentQueue(config))
                 {
                     q2.EnqueueManySized(10, 32);
-                    var result = await q2.DequeueAsync(secondDequeue);
+                    var result = await q2.DequeueAsync(secondDequeue, 1);
                     result.Commit();
                     q2.HasItems.ShouldBeFalse();
                 }

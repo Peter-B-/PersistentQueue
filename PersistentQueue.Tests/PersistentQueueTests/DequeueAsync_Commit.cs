@@ -15,9 +15,9 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             queue.EnqueueMany(2);
 
             // Act
-            var results1 = await queue.DequeueAsync(2);
-            var results2 = await queue.DequeueAsync(2);
-            var results3 = await queue.DequeueAsync(2);
+            var results1 = await queue.DequeueAsync(2, 1);
+            var results2 = await queue.DequeueAsync(2, 1);
+            var results3 = await queue.DequeueAsync(2, 1);
 
             // Assert
             results1.Items.Count.ShouldBe(2);
@@ -35,10 +35,10 @@ namespace PersistentQueue.Tests.PersistentQueueTests
             queue.EnqueueMany(10);
 
             // Act
-            var results1 = await queue.DequeueAsync(2);
+            var results1 = await queue.DequeueAsync(2, 1);
             results1.Commit();
 
-            var results2 = await queue.DequeueAsync(2);
+            var results2 = await queue.DequeueAsync(2, 1);
 
             // Assert
             results1.Items.Count.ShouldBe(2);
