@@ -12,4 +12,8 @@
     <RootNamespace>Persistent.Queue</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Nito.AsyncEx.Tasks" Version="5.0.0" />
+  </ItemGroup>
+
 </Project>

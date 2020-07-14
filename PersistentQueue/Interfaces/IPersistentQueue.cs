@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Persistent.Queue.Interfaces
@@ -7,6 +8,6 @@ namespace Persistent.Queue.Interfaces
     {
         bool HasItems { get; }
         void Enqueue(ReadOnlySpan<byte> itemData);
-        Task<IDequeueResult> DequeueAsync(int maxItems, int minItems = 1);
+        Task<IDequeueResult> DequeueAsync(int maxItems, int minItems, CancellationToken token = default);
     }
 }
