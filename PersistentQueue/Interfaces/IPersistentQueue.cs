@@ -8,6 +8,7 @@ namespace Persistent.Queue.Interfaces
     {
         bool HasItems { get; }
         void Enqueue(ReadOnlySpan<byte> itemData);
+        Task<IDequeueResult> DequeueAsync(CancellationToken token = default);
         Task<IDequeueResult> DequeueAsync(int maxItems, int minItems, CancellationToken token = default);
     }
 }
