@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using Persistent.Queue.Interfaces.Intern;
@@ -9,7 +9,7 @@ namespace Persistent.Queue.Utils
     {
         private readonly MemoryMappedFile _mmf;
         private readonly string _pageFile;
-        private bool disposed;
+        private bool _disposed;
 
         public Page(string pageFile, long pageSize, long pageIndex)
         {
@@ -23,23 +23,22 @@ namespace Persistent.Queue.Utils
 
         public Stream GetReadStream(long position, long length)
         {
+            if (_disposed) throw new ObjectDisposedException(nameof(Page));
+
             return _mmf.CreateViewStream(position, length, MemoryMappedFileAccess.Read);
         }
 
         public Stream GetWriteStream(long position, long length)
         {
+            if (_disposed) throw new ObjectDisposedException(nameof(Page));
+
             return _mmf.CreateViewStream(position, length, MemoryMappedFileAccess.Write);
         }
 
         public void Delete()
         {
-            Dispose();
+            Dispose(true);
             DeleteFile(_pageFile);
-        }
-
-        void IPage.DeleteFile(string filePath)
-        {
-            DeleteFile(filePath);
         }
 
         public void Dispose()
@@ -56,13 +55,13 @@ namespace Persistent.Queue.Utils
 
         protected void Dispose(bool disposing)
         {
-            if (disposed)
+            if (_disposed)
                 return;
 
             if (disposing)
-                if (_mmf != null)
-                    _mmf.Dispose();
-            disposed = true;
+                _mmf?.Dispose();
+
+            _disposed = true;
         }
 
         ~Page()

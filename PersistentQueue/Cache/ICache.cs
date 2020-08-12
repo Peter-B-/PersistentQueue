@@ -1,15 +1,12 @@
-﻿using System;
+using System;
 
 namespace Persistent.Queue.Cache
 {
-    internal interface ICache<TKey, TValue> where TValue : IDisposable
+    internal interface ICache<in TKey, TValue>: IDisposable
     {
-        TValue this[TKey key] { get; set; }
-        void Add(TKey key, TValue value);
-        bool TryGetValue(TKey key, out TValue value);
-        TValue Get(TKey key);
-        void Remove(TKey key);
-        void RemoveAll();
-        bool ContainsKey(TKey key);
+        TValue GetOrCreate(TKey key, Func<TValue> factory);
+        bool TryRemoveValue(TKey key, out TValue value);
+
+        void Release(TKey key);
     }
 }
