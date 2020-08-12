@@ -178,10 +178,17 @@ namespace Persistent.Queue.Cache
         {
             if (disposing)
             {
-                RemoveAll();
-                _cts?.Dispose();
-                _lock?.Dispose();
+                _cts.Cancel();
 
+                RemoveAll();
+
+                // Wait until write lock becomes available.
+                // If this is the case, The CleanupLoop must have finished.
+                _lock.EnterWriteLock();
+                _lock.ExitWriteLock();
+                _lock.Dispose();
+
+                _cts.Dispose();
             }
         }
 
