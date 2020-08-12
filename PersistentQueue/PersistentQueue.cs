@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -15,14 +15,13 @@ namespace Persistent.Queue
     {
         // Page factories
         private readonly IPageFactory _dataPageFactory;
+        private readonly IPageFactory _indexPageFactory;
+        private readonly IPageFactory _metaPageFactory;
 
-        // Data pages
         private readonly long _dataPageSize;
         private readonly long _indexItemSize;
-        private readonly IPageFactory _indexPageFactory;
         private readonly object _lockObject = new object();
         private readonly long _metaDataItemSize;
-        private readonly IPageFactory _metaPageFactory;
 
         private readonly QueueStateMonitor _queueMonitor;
         protected readonly PersistentQueueConfiguration Configuration;
@@ -53,7 +52,7 @@ namespace Persistent.Queue
 
             // Init page factories
             // MetaPage: Page size = item size => only 1 item possible.
-            _metaPageFactory = new PageFactory(_metaDataItemSize, Configuration.GetMetaPath());
+            _metaPageFactory = new PageFactory(_metaDataItemSize, Configuration.GetMetaPath(), TimeSpan.FromHours(1));
             _indexPageFactory = new PageFactory(indexPageSize, Configuration.GetIndexPath());
             _dataPageFactory = new PageFactory(_dataPageSize, Configuration.GetDataPath());
 
@@ -218,6 +217,7 @@ namespace Persistent.Queue
             {
                 _metaData.WriteToStream(writeStream);
             }
+            _metaPageFactory.ReleasePage(0);
         }
 
         private void RejectBatch(ItemRange range)
