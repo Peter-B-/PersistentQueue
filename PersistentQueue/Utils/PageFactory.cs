@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using Persistent.Queue.Cache;
 using Persistent.Queue.Interfaces.Intern;
@@ -9,18 +9,18 @@ namespace Persistent.Queue.Utils
     {
         private static readonly string PageFileName = "page";
         private static readonly string PageFileSuffix = ".dat";
-        private readonly Cache<long, IPage> _pageCache;
-        private readonly string PageDir;
-        private readonly long PageSize;
-        private bool disposed;
+        private readonly ICache<long, IPage> _pageCache;
+        private readonly string _pageDir;
+        private readonly long _pageSize;
+        private bool _disposed;
 
         public PageFactory(long pageSize, string pageDirectory)
         {
-            PageSize = pageSize;
-            PageDir = pageDirectory;
+            _pageSize = pageSize;
+            _pageDir = pageDirectory;
 
-            if (!Directory.Exists(PageDir))
-                Directory.CreateDirectory(PageDir);
+            if (!Directory.Exists(_pageDir))
+                Directory.CreateDirectory(_pageDir);
 
             // A simple cache using the page filename as key.
             _pageCache = new Cache<long, IPage>(10000);
@@ -28,21 +28,27 @@ namespace Persistent.Queue.Utils
 
         public IPage GetPage(long index)
         {
+            if (_disposed) throw new ObjectDisposedException(nameof(PageFactory));
+
             IPage page;
 
             if (!_pageCache.TryGetValue(index, out page))
-                page = _pageCache[index] = new Page(GetFilePath(index), PageSize, index);
+                page = _pageCache[index] = new Page(GetFilePath(index), _pageSize, index);
 
             return page;
         }
 
         public void ReleasePage(long index)
         {
+            if (_disposed) throw new ObjectDisposedException(nameof(PageFactory));
+
             _pageCache.Release(index);
         }
 
         public void DeletePage(long index)
         {
+            if (_disposed) throw new ObjectDisposedException(nameof(PageFactory));
+
             IPage page;
 
             // Lookup page in _pageCache.
@@ -67,24 +73,17 @@ namespace Persistent.Queue.Utils
 
         private string GetFilePath(long index)
         {
-            return Path.Combine(PageDir, string.Format("{0}-{1}{2}", PageFileName, index, PageFileSuffix));
+            return Path.Combine(_pageDir, string.Format("{0}-{1}{2}", PageFileName, index, PageFileSuffix));
         }
 
         protected void Dispose(bool disposing)
         {
-            if (disposed)
+            if (_disposed)
                 return;
 
-            if (disposing)
-                if (_pageCache != null)
-                    _pageCache.RemoveAll();
+            if (disposing) _pageCache?.Dispose();
 
-            disposed = true;
-        }
-
-        ~PageFactory()
-        {
-            Dispose(false);
+            _disposed = true;
         }
     }
 }

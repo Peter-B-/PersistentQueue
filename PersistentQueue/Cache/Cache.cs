@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -13,7 +13,7 @@ namespace Persistent.Queue.Cache
         private readonly Dictionary<TKey, TValue> _items;
         private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
         private readonly Dictionary<TKey, TTLValue> _ttlDict;
-        private readonly int Ttl;
+        private readonly int _ttl;
 
         public Cache() : this(DefaultTtl)
         {
@@ -21,10 +21,10 @@ namespace Persistent.Queue.Cache
 
         public Cache(int ttlMillis)
         {
-            Ttl = ttlMillis;
+            _ttl = ttlMillis;
             _items = new Dictionary<TKey, TValue>();
             _ttlDict = new Dictionary<TKey, TTLValue>();
-            Task.Factory.StartNew(() => CleanupLoop(ttlMillis / 2, _cts.Token), _cts.Token);
+            Task.Factory.StartNew(CleanupLoop, _cts.Token);
         }
 
         public void Add(TKey key, TValue value)
@@ -137,12 +137,6 @@ namespace Persistent.Queue.Cache
             }
         }
 
-        ~Cache()
-        {
-            if (_cts != null)
-                _cts.Cancel();
-        }
-
         public void Release(TKey key)
         {
             try
@@ -169,7 +163,7 @@ namespace Persistent.Queue.Cache
                 var keysToRemove = _ttlDict
                     .Where(i => i.Value != null
                                 && i.Value.RefCount <= 0
-                                && i.Value.LastAccessTimestamp + Ttl < DateTime.Now.Ticks)
+                                && i.Value.LastAccessTimestamp + _ttl < DateTime.Now.Ticks)
                     .Select(i => i.Key)
                     .ToArray();
 
@@ -200,13 +194,36 @@ namespace Persistent.Queue.Cache
             }
         }
 
-        private async void CleanupLoop(int pollingMillis, CancellationToken ct)
+        private async void CleanupLoop()
         {
-            while (true)
+            try
             {
-                RemoveOldItems();
-                await Task.Delay(pollingMillis);
+                while (!_cts.IsCancellationRequested)
+                {
+                    RemoveOldItems();
+                    await Task.Delay(_ttl / 2, _cts.Token);
+                }
             }
+            catch (OperationCanceledException)
+            {
+                // ignore
+            }
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                RemoveAll();
+                _cts?.Dispose();
+                _lock?.Dispose();
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }
