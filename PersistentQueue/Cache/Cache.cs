@@ -27,9 +27,9 @@ namespace Persistent.Queue.Cache
 
         public TValue GetOrCreate(TKey key, Func<TValue> factory)
         {
+            _lock.EnterUpgradeableReadLock();
             try
             {
-                _lock.EnterUpgradeableReadLock();
                 {
                     if (_items.TryGetValue(key, out var item))
                     {
@@ -38,9 +38,9 @@ namespace Persistent.Queue.Cache
                     }
                 }
 
+                _lock.EnterWriteLock();
                 try
                 {
-                    _lock.EnterWriteLock();
                     // Retry to return item. Another process might have created it while
                     // waiting for the write lock.
                     if (_items.TryGetValue(key, out var itemRetry))
@@ -69,10 +69,9 @@ namespace Persistent.Queue.Cache
 
         public bool TryRemoveValue(TKey key, out TValue value)
         {
+            _lock.EnterWriteLock();
             try
             {
-                _lock.EnterWriteLock();
-
                 if (_items.TryGetValue(key, out var item))
                 {
                     value = item.Value;
@@ -91,10 +90,9 @@ namespace Persistent.Queue.Cache
 
         public void Release(TKey key)
         {
+            _lock.EnterReadLock();
             try
             {
-                _lock.EnterReadLock();
-
                 if (_items.TryGetValue(key, out var item))
                     item.DecreaseRefCount();
             }
@@ -107,10 +105,9 @@ namespace Persistent.Queue.Cache
 
         public void RemoveAll()
         {
+            _lock.EnterWriteLock();
             try
             {
-                _lock.EnterWriteLock();
-
                 foreach (var item in _items.Values.ToArray())
                     (item.Value as IDisposable)?.Dispose();
 
@@ -124,10 +121,9 @@ namespace Persistent.Queue.Cache
 
         private void RemoveOldItems()
         {
+            _lock.EnterUpgradeableReadLock();
             try
             {
-                _lock.EnterUpgradeableReadLock();
-
                 var removeTimeStamp = DateTime.Now.Subtract(_ttl);
                 var itemsToRemove = _items.Values
                     .Where(i =>
@@ -137,9 +133,9 @@ namespace Persistent.Queue.Cache
 
                 if (itemsToRemove.Length <= 0) return;
 
+                _lock.EnterWriteLock();
                 try
                 {
-                    _lock.EnterWriteLock();
                     foreach (var item in itemsToRemove)
                         if (Interlocked.Read(ref item.RefCount) == 0)
                         {
