@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Persistent.Queue.Cache
 {
-    public class Cache<TKey, TValue> : ICache<TKey, TValue> where TValue : IDisposable
+    public class Cache<TKey, TValue> : ICache<TKey, TValue>
     {
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private readonly Dictionary<TKey, CacheItem> _items = new Dictionary<TKey, CacheItem>();
@@ -112,7 +112,7 @@ namespace Persistent.Queue.Cache
                 _lock.EnterWriteLock();
 
                 foreach (var item in _items.Values.ToArray())
-                    item?.Value?.Dispose();
+                    (item.Value as IDisposable)?.Dispose();
 
                 _items.Clear();
             }
@@ -143,7 +143,7 @@ namespace Persistent.Queue.Cache
                     foreach (var item in itemsToRemove)
                         if (Interlocked.Read(ref item.RefCount) == 0)
                         {
-                            item.Value?.Dispose();
+                            (item.Value as IDisposable)?.Dispose();
                             _items.Remove(item.Key);
                         }
                 }
