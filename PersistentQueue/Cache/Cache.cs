@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -6,126 +7,81 @@ using System.Threading.Tasks;
 
 namespace Persistent.Queue.Cache
 {
-    internal class Cache<TKey, TValue> : ICache<TKey, TValue> where TValue : IDisposable
+    public class Cache<TKey, TValue> : ICache<TKey, TValue> where TValue : IDisposable
     {
-        private static readonly int DefaultTtl = 10 * 1000;
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
-        private readonly Dictionary<TKey, TValue> _items;
+        private readonly Dictionary<TKey, CacheItem> _items = new Dictionary<TKey, CacheItem>();
         private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
-        private readonly Dictionary<TKey, TTLValue> _ttlDict;
-        private readonly int _ttl;
+        private readonly TimeSpan _ttl;
 
-        public Cache() : this(DefaultTtl)
-        {
-        }
 
-        public Cache(int ttlMillis)
+        public Cache(TimeSpan ttl)
         {
-            _ttl = ttlMillis;
-            _items = new Dictionary<TKey, TValue>();
-            _ttlDict = new Dictionary<TKey, TTLValue>();
+            if (ttl > TimeSpan.FromSeconds(1))
+                _ttl = ttl;
+            else
+                _ttl = TimeSpan.FromSeconds(1);
+
             Task.Factory.StartNew(CleanupLoop, _cts.Token);
         }
 
-        public void Add(TKey key, TValue value)
+        public TValue GetOrCreate(TKey key, Func<TValue> factory)
         {
             try
             {
-                _lock.EnterWriteLock();
-                _items.Add(key, value);
-
-                _ttlDict.Add(key, new TTLValue
+                _lock.EnterUpgradeableReadLock();
                 {
-                    LastAccessTimestamp = DateTime.Now,
-                    RefCount = 1
-                });
-            }
-            finally
-            {
-                _lock.ExitWriteLock();
-            }
-        }
-
-        public bool TryGetValue(TKey key, out TValue value)
-        {
-            value = Get(key);
-            if (value != null)
-                return true;
-
-            return false;
-        }
-
-        public TValue Get(TKey key)
-        {
-            try
-            {
-                _lock.EnterReadLock();
-
-                if (_ttlDict.TryGetValue(key, out var ttl))
-                {
-                    ttl.LastAccessTimestamp = DateTime.Now;
-                    Interlocked.Increment(ref ttl.RefCount);
+                    if (_items.TryGetValue(key, out var item))
+                    {
+                        item.IncreaseRefCount();
+                        return item.Value;
+                    }
                 }
 
-                if (_items.TryGetValue(key, out var item))
-                    return item;
+                try
+                {
+                    _lock.EnterWriteLock();
+                    // Retry to return item. Another process might have created it while
+                    // waiting for the write lock.
+                    if (_items.TryGetValue(key, out var itemRetry))
+                    {
+                        itemRetry.IncreaseRefCount();
+                        return itemRetry.Value;
+                    }
 
-                return default;
+                    var value = factory();
+                    var item = new CacheItem(key, value);
+                    _items.Add(key, item);
+
+                    item.IncreaseRefCount();
+                    return item.Value;
+                }
+                finally
+                {
+                    _lock.ExitWriteLock();
+                }
             }
             finally
             {
-                _lock.ExitReadLock();
+                _lock.ExitUpgradeableReadLock();
             }
         }
 
-        public TValue this[TKey key]
-        {
-            get => Get(key);
-            set => Add(key, value);
-        }
-
-        public void Remove(TKey key)
+        public bool TryRemoveValue(TKey key, out TValue value)
         {
             try
             {
                 _lock.EnterWriteLock();
 
                 if (_items.TryGetValue(key, out var item))
-                    item.Dispose();
+                {
+                    value = item.Value;
+                    _items.Remove(item.Key);
+                    return true;
+                }
 
-                _items.Remove(key);
-                _ttlDict.Remove(key);
-            }
-            finally
-            {
-                _lock.ExitWriteLock();
-            }
-        }
-
-        public void RemoveAll()
-        {
-            try
-            {
-                _lock.EnterWriteLock();
-
-                foreach (var item in _items.Values.ToArray())
-                    item?.Dispose();
-
-                _items.Clear();
-                _ttlDict.Clear();
-            }
-            finally
-            {
-                _lock.ExitWriteLock();
-            }
-        }
-
-        public bool ContainsKey(TKey key)
-        {
-            try
-            {
-                _lock.EnterReadLock();
-                return _items.ContainsKey(key);
+                value = default;
+                return false;
             }
             finally
             {
@@ -139,9 +95,8 @@ namespace Persistent.Queue.Cache
             {
                 _lock.EnterReadLock();
 
-                TTLValue ttl;
-                if (_ttlDict.TryGetValue(key, out ttl))
-                    Interlocked.Decrement(ref ttl.RefCount);
+                if (_items.TryGetValue(key, out var item))
+                    item.DecreaseRefCount();
             }
             finally
             {
@@ -149,40 +104,53 @@ namespace Persistent.Queue.Cache
             }
         }
 
+
+        public void RemoveAll()
+        {
+            try
+            {
+                _lock.EnterWriteLock();
+
+                foreach (var item in _items.Values.ToArray())
+                    item?.Value?.Dispose();
+
+                _items.Clear();
+            }
+            finally
+            {
+                _lock.ExitWriteLock();
+            }
+        }
+
         private void RemoveOldItems()
         {
-            var count = 0;
             try
             {
                 _lock.EnterUpgradeableReadLock();
 
-                var removeTimeStamp = DateTime.Now.AddMilliseconds(-_ttl);
-                var keysToRemove = _ttlDict
-                    .Where(i => i.Value != null
-                                && i.Value.RefCount <= 0
-                                && i.Value.LastAccessTimestamp < removeTimeStamp)
-                    .Select(i => i.Key)
+                var removeTimeStamp = DateTime.Now.Subtract(_ttl);
+                var itemsToRemove = _items.Values
+                    .Where(i =>
+                                    Interlocked.Read(ref i.RefCount) <= 0
+                                && i.LastAccessTimestamp < removeTimeStamp)
                     .ToArray();
 
-                if (keysToRemove.Length > 0)
-                    try
-                    {
-                        _lock.EnterWriteLock();
-                        foreach (var key in keysToRemove)
+                if (itemsToRemove.Length <= 0) return;
+
+                try
+                {
+                    _lock.EnterWriteLock();
+                    foreach (var item in itemsToRemove)
+                        if (Interlocked.Read(ref item.RefCount) == 0)
                         {
-                            if (_items.TryGetValue(key, out var item))
-                                item?.Dispose();
-
-                            _items.Remove(key);
-                            _ttlDict.Remove(key);
-
-                            count++;
+                            item.Value?.Dispose();
+                            _items.Remove(item.Key);
                         }
-                    }
-                    finally
-                    {
-                        _lock.ExitWriteLock();
-                    }
+                }
+                finally
+                {
+                    _lock.ExitWriteLock();
+                }
             }
             finally
             {
@@ -213,6 +181,7 @@ namespace Persistent.Queue.Cache
                 RemoveAll();
                 _cts?.Dispose();
                 _lock?.Dispose();
+
             }
         }
 
@@ -220,6 +189,31 @@ namespace Persistent.Queue.Cache
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        private class CacheItem
+        {
+            public TKey Key { get; }
+            public TValue Value { get; }
+            public DateTime LastAccessTimestamp = DateTime.Now;
+            public long RefCount = 0;
+
+            public CacheItem(TKey key, TValue value)
+            {
+                Value = value;
+                Key = key;
+            }
+
+            public void IncreaseRefCount()
+            {
+                Interlocked.Increment(ref RefCount);
+                LastAccessTimestamp = DateTime.Now;
+            }
+
+            public void DecreaseRefCount()
+            {
+                Interlocked.Decrement(ref RefCount);
+            }
         }
     }
 }

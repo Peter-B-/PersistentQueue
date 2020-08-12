@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace Persistent.Queue.Interfaces.Intern
@@ -9,6 +9,5 @@ namespace Persistent.Queue.Interfaces.Intern
         Stream GetWriteStream(long position, long length);
         Stream GetReadStream(long position, long length);
         void Delete();
-        void DeleteFile(string filePath);
     }
 }

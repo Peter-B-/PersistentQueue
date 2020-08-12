@@ -37,13 +37,8 @@ namespace Persistent.Queue.Utils
 
         public void Delete()
         {
-            Dispose();
+            Dispose(true);
             DeleteFile(_pageFile);
-        }
-
-        void IPage.DeleteFile(string filePath)
-        {
-            DeleteFile(filePath);
         }
 
         public void Dispose()
@@ -64,8 +59,8 @@ namespace Persistent.Queue.Utils
                 return;
 
             if (disposing)
-                if (_mmf != null)
-                    _mmf.Dispose();
+                _mmf?.Dispose();
+
             _disposed = true;
         }
 

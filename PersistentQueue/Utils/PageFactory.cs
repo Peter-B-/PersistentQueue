@@ -14,7 +14,7 @@ namespace Persistent.Queue.Utils
         private readonly long _pageSize;
         private bool _disposed;
 
-        public PageFactory(long pageSize, string pageDirectory)
+        public PageFactory(long pageSize, string pageDirectory, TimeSpan? cacheTtl = null)
         {
             _pageSize = pageSize;
             _pageDir = pageDirectory;
@@ -23,19 +23,14 @@ namespace Persistent.Queue.Utils
                 Directory.CreateDirectory(_pageDir);
 
             // A simple cache using the page filename as key.
-            _pageCache = new Cache<long, IPage>(10000);
+            _pageCache = new Cache<long, IPage>(cacheTtl ?? TimeSpan.FromSeconds(10));
         }
 
         public IPage GetPage(long index)
         {
             if (_disposed) throw new ObjectDisposedException(nameof(PageFactory));
 
-            IPage page;
-
-            if (!_pageCache.TryGetValue(index, out page))
-                page = _pageCache[index] = new Page(GetFilePath(index), _pageSize, index);
-
-            return page;
+            return _pageCache.GetOrCreate(index, () => new Page(GetFilePath(index), _pageSize, index));
         }
 
         public void ReleasePage(long index)
@@ -49,20 +44,11 @@ namespace Persistent.Queue.Utils
         {
             if (_disposed) throw new ObjectDisposedException(nameof(PageFactory));
 
-            IPage page;
-
-            // Lookup page in _pageCache.
-            if (_pageCache.TryGetValue(index, out page))
-            {
-                // delete and remove from cache
+            if (_pageCache.TryRemoveValue(index, out var page))
                 page.Delete();
-                _pageCache.Remove(index);
-            }
             else
-            {
                 // If not found in cache, delete the file directly.
                 Page.DeleteFile(GetFilePath(index));
-            }
         }
 
         public void Dispose()
