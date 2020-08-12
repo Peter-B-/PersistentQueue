@@ -1,8 +1,10 @@
-﻿namespace Persistent.Queue.Cache
+using System;
+
+namespace Persistent.Queue.Cache
 {
     internal class TTLValue
     {
-        public long LastAccessTimestamp;
+        public DateTime LastAccessTimestamp;
         public long RefCount;
     }
 }

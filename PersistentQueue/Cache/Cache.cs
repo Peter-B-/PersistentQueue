@@ -36,7 +36,7 @@ namespace Persistent.Queue.Cache
 
                 _ttlDict.Add(key, new TTLValue
                 {
-                    LastAccessTimestamp = DateTime.Now.Ticks,
+                    LastAccessTimestamp = DateTime.Now,
                     RefCount = 1
                 });
             }
@@ -61,15 +61,13 @@ namespace Persistent.Queue.Cache
             {
                 _lock.EnterReadLock();
 
-                TTLValue ttl;
-                if (_ttlDict.TryGetValue(key, out ttl))
+                if (_ttlDict.TryGetValue(key, out var ttl))
                 {
-                    Interlocked.Exchange(ref ttl.LastAccessTimestamp, DateTime.Now.Ticks);
+                    ttl.LastAccessTimestamp = DateTime.Now;
                     Interlocked.Increment(ref ttl.RefCount);
                 }
 
-                TValue item;
-                if (_items.TryGetValue(key, out item))
+                if (_items.TryGetValue(key, out var item))
                     return item;
 
                 return default;
@@ -92,8 +90,7 @@ namespace Persistent.Queue.Cache
             {
                 _lock.EnterWriteLock();
 
-                TValue item;
-                if (_items.TryGetValue(key, out item))
+                if (_items.TryGetValue(key, out var item))
                     item.Dispose();
 
                 _items.Remove(key);
@@ -112,8 +109,7 @@ namespace Persistent.Queue.Cache
                 _lock.EnterWriteLock();
 
                 foreach (var item in _items.Values.ToArray())
-                    if (item != null)
-                        item.Dispose();
+                    item?.Dispose();
 
                 _items.Clear();
                 _ttlDict.Clear();
@@ -160,10 +156,11 @@ namespace Persistent.Queue.Cache
             {
                 _lock.EnterUpgradeableReadLock();
 
+                var removeTimeStamp = DateTime.Now.AddMilliseconds(-_ttl);
                 var keysToRemove = _ttlDict
                     .Where(i => i.Value != null
                                 && i.Value.RefCount <= 0
-                                && i.Value.LastAccessTimestamp + _ttl < DateTime.Now.Ticks)
+                                && i.Value.LastAccessTimestamp < removeTimeStamp)
                     .Select(i => i.Key)
                     .ToArray();
 
@@ -173,9 +170,8 @@ namespace Persistent.Queue.Cache
                         _lock.EnterWriteLock();
                         foreach (var key in keysToRemove)
                         {
-                            TValue item;
-                            if (_items.TryGetValue(key, out item))
-                                item.Dispose();
+                            if (_items.TryGetValue(key, out var item))
+                                item?.Dispose();
 
                             _items.Remove(key);
                             _ttlDict.Remove(key);
