@@ -2,7 +2,7 @@
 
 namespace Persistent.Queue.DataObjects
 {
-    internal class IndexItem
+    public class IndexItem
     {
         public long DataPageIndex { get; set; }
         public long ItemOffset { get; set; }

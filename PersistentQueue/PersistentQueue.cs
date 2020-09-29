@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,7 +10,7 @@ using Persistent.Queue.Utils;
 
 namespace Persistent.Queue
 {
-    public class PersistentQueue : IPersistentQueue
+    public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
     {
         // Page factories
         private readonly IPageFactory _dataPageFactory;
@@ -37,7 +36,8 @@ namespace Persistent.Queue
         {
         }
 
-        public PersistentQueue(string queuePath, long dataPageSize) : this(new PersistentQueueConfiguration(queuePath, dataPageSize))
+        public PersistentQueue(string queuePath, long dataPageSize) : this(
+            new PersistentQueueConfiguration(queuePath, dataPageSize))
         {
         }
 
@@ -78,7 +78,8 @@ namespace Persistent.Queue
                     return;
 
                 if (itemData.Length > _dataPageSize)
-                    throw new ArgumentOutOfRangeException(nameof(itemData), "Item data length is greater than queue data page size");
+                    throw new ArgumentOutOfRangeException(nameof(itemData),
+                        "Item data length is greater than queue data page size");
 
                 if (_tailDataItemOffset + itemData.Length > _dataPageSize) // Not enough space in current page
                 {
@@ -162,6 +163,32 @@ namespace Persistent.Queue
             return result;
         }
 
+        public QueueStatistics GetStatistics()
+        {
+            var headIndex = _metaData.HeadIndex;
+            var tailIndex = _metaData.TailIndex;
+
+            var dataSize = GetDataSize(headIndex, tailIndex);
+
+            return new QueueStatistics()
+            {
+                QueueLength =  tailIndex - headIndex,
+                QueueDataSizeEstimate = dataSize,
+                TotalEnqueuedItems = tailIndex
+            };
+        }
+
+        private long GetDataSize(long headIndex, long tailIndex)
+        {
+            if (headIndex == tailIndex) return 0;
+            
+            var headIndexItem = GetIndexItem(headIndex);
+            var tailIndexItem = GetIndexItem(tailIndex - 1);
+
+            var dataSize = IndexItemHelper.EstimateQueueDataSize(headIndexItem, tailIndexItem, _dataPageSize);
+            return dataSize;
+        }
+
         private void InitializeMetaData()
         {
             var metaPage = _metaPageFactory.GetPage(0);
@@ -217,6 +244,7 @@ namespace Persistent.Queue
             {
                 _metaData.WriteToStream(writeStream);
             }
+
             _metaPageFactory.ReleasePage(0);
         }
 
@@ -271,7 +299,7 @@ namespace Persistent.Queue
             var buffer = new byte[indexItem.ItemLength];
             using (var readStream = dataPage.GetReadStream(indexItem.ItemOffset, indexItem.ItemLength))
             {
-                readStream.Read(buffer, 0, (int)indexItem.ItemLength);
+                readStream.Read(buffer, 0, (int) indexItem.ItemLength);
             }
 
             _dataPageFactory.ReleasePage(dataPage.Index);
