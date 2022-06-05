@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Nito.AsyncEx;
 using Persistent.Queue.DataObjects;
 using Persistent.Queue.Interfaces;
@@ -87,13 +88,12 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
         var noOfItems = (int) Math.Min(availableElements, maxItems);
 
         var data =
-            Enumerable.Range(0, noOfItems)
-                .Select(offset => headIndex + offset)
-                .Select(ReadItem)
-                .ToList();
+            Configuration.MaxDequeueBatchSizeInByte.HasValue
+                ? ReadItemsWithSizeLimit(headIndex, noOfItems, Configuration.MaxDequeueBatchSizeInByte.Value)
+                : ReadItems(headIndex, noOfItems);
 
 
-        var result = new DequeueResult(data, new ItemRange(headIndex, noOfItems), CommitBatch, RejectBatch);
+        var result = new DequeueResult(data, new ItemRange(headIndex, data.Count), CommitBatch, RejectBatch);
         return result;
     }
 
@@ -296,11 +296,8 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
         _metaPageFactory.ReleasePage(0);
     }
 
-    private Memory<byte> ReadItem(long itemIndex)
+    private Memory<byte> Readitem(IndexItem indexItem)
     {
-        // Get index item for head index
-        var indexItem = GetIndexItem(itemIndex);
-
         // Get data page
         var dataPage = _dataPageFactory.GetPage(indexItem.DataPageIndex);
 
@@ -315,6 +312,66 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
         _dataPageFactory.ReleasePage(dataPage.Index);
 
         return buffer;
+    }
+
+    private Memory<byte> ReadItem(long itemIndex)
+    {
+        // Get index item for head index
+        var indexItem = GetIndexItem(itemIndex);
+
+        return Readitem(indexItem);
+    }
+
+    private bool ReadItemIfSmallerThan(long itemIndex, long sizeLimit, [NotNullWhen(true)] out Memory<byte>? item)
+    {
+        // Get index item for head index
+        var indexItem = GetIndexItem(itemIndex);
+
+        if (indexItem.ItemLength <= sizeLimit)
+        {
+            item = Readitem(indexItem);
+            return true;
+        }
+        else
+        {
+            item = null;
+            return false;
+        }
+    }
+
+    private List<Memory<byte>> ReadItems(long headIndex, int noOfItems)
+    {
+        return
+            Enumerable.Range(0, noOfItems)
+                .Select(offset => headIndex + offset)
+                .Select(ReadItem)
+                .ToList();
+    }
+
+    private List<Memory<byte>> ReadItemsWithSizeLimit(long headIndex, int noOfItems, long maxSize)
+    {
+        var data = new List<Memory<byte>>(noOfItems);
+
+        var firstItem = ReadItem(headIndex);
+        data.Add(firstItem);
+        var dataSize = firstItem.Length;
+
+        var offset = 1;
+        while (offset < noOfItems && dataSize < maxSize)
+        {
+            var itemSizeLimit = maxSize - dataSize;
+            if (ReadItemIfSmallerThan(headIndex + offset, itemSizeLimit, out var item))
+            {
+                data.Add(item.Value);
+                dataSize += item.Value.Length;
+            }
+            else
+                break;
+
+            offset++;
+        }
+
+        return data;
     }
 
     private void RejectBatch(ItemRange range)

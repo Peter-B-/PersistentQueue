@@ -1,10 +1,14 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 
 namespace PersistentQueue.Tests;
 
 public class UnitTestPersistentQueue : Persistent.Queue.PersistentQueue
 {
-    public UnitTestPersistentQueue() : this(new UnitTestQueueConfiguration())
+    public UnitTestPersistentQueue(bool hasMaxSize = false) :
+        this(new UnitTestQueueConfiguration
+        {
+            MaxDequeueBatchSizeInByte = hasMaxSize ? 16 << 10 : null
+        })
     {
     }
 
