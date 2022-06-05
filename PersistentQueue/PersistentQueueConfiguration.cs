@@ -22,8 +22,51 @@ public class PersistentQueueConfiguration
 
     public static long DefaultDataPageSize { get; } = 128 * 1024 * 1024;
 
+    /// <summary>
+    ///     Minimum number of items returned in a single dequeue operation. <br />
+    ///     The dequeue operation will not complete until <c>MinDequeueBatchSize</c> items can be returned.
+    /// </summary>
     public int MinDequeueBatchSize { get; set; } = 1;
+
+    /// <summary>
+    ///     <para>
+    ///         The maximum number of items returned in a single dequeue operation.
+    ///     </para>
+    ///     <para>
+    ///         The dequeue operation will collect items until
+    ///         <list type="bullet">
+    ///             <item>There are currently no more items in the PersistentQueue.</item>
+    ///             <item>There are <c>MaxDequeueBatchSize</c> items in the current batch.</item>
+    ///             <item>There combined size of the items would exceed <c>MaxDequeueBatchSizeInByte</c> items, if the next item is added.</item>
+    ///         </list>
+    ///     </para>
+    /// </summary>
     public int MaxDequeueBatchSize { get; set; } = 100;
+
+    /// <summary>
+    ///     <para>
+    ///         Size limit for the number of items returned in a single batch.
+    ///     </para>
+    ///     <para>
+    ///         Warning: If <c>ThrowExceptionWhenItemExceedingMaxDequeueBatchSizeIsEnqueued</c> is false, a batch can exceed this size, if a large item was
+    ///         enqueued.
+    ///     </para>
+    /// </summary>
+    public long? MaxDequeueBatchSizeInByte { get; set; }
+
+    /// <summary>
+    ///     <list type="table">
+    ///         <listheader>
+    ///             <term>true</term>
+    ///             <description>An InvalidOperationException is thrown, if an item exceeding <c>MaxDequeueBatchSizeInByte</c> is enqueued.</description>
+    ///         </listheader>
+    ///         <item>
+    ///             <term>false</term>
+    ///             <description>Items exceeding <c>MaxDequeueBatchSizeInByte</c> can be enqueued.</description>
+    ///         </item>
+    ///     </list>
+    /// </summary>
+    public bool ThrowExceptionWhenItemExceedingMaxDequeueBatchSizeIsEnqueued { get; set; }
 
     public string GetMetaPath() => Path.Combine(QueuePath, MetaPageFolder);
     public string GetIndexPath() => Path.Combine(QueuePath, IndexPageFolder);
