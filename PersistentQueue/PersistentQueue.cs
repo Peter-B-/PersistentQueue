@@ -99,16 +99,23 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
 
     public void Enqueue(ReadOnlySpan<byte> itemData)
     {
+        // Throw or silently return if itemData is null?
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+        if (itemData == null) return;
+
+        if (itemData.Length > _dataPageSize)
+            throw new ArgumentOutOfRangeException(nameof(itemData),
+                                                  "Item data length is greater than queue data page size");
+
+        if (Configuration.ThrowExceptionWhenItemExceedingMaxDequeueBatchSizeIsEnqueued &&
+            Configuration.MaxDequeueBatchSizeInByte.HasValue &&
+            itemData.Length > Configuration.MaxDequeueBatchSizeInByte.Value
+           )
+            throw new InvalidOperationException(
+                $"Item is larger than {nameof(Configuration.MaxDequeueBatchSizeInByte)} ({itemData.Length}, {Configuration.MaxDequeueBatchSizeInByte}) and cannot be enqueued.");
+
         lock (_lockObject)
         {
-            // Throw or silently return if itemData is null?
-            if (itemData == null)
-                return;
-
-            if (itemData.Length > _dataPageSize)
-                throw new ArgumentOutOfRangeException(nameof(itemData),
-                                                      "Item data length is greater than queue data page size");
-
             if (_tailDataItemOffset + itemData.Length > _dataPageSize) // Not enough space in current page
             {
                 _tailDataPageIndex++;
