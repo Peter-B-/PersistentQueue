@@ -1,16 +1,17 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using Shouldly;
 
-namespace PersistentQueue.Tests.PersistentQueueTests;
+namespace PersistentQueue.Tests.PersistentQueueTests.Dequeue;
 
 [TestFixture]
 public class DequeueAsync_Commit
 {
-    [Test]
-    public async Task NoCommit_SameElementsAreReturnedAgain()
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task NoCommit_SameElementsAreReturnedAgain(bool hasMaxSize)
     {
         // Arrange
-        using var queue = new UnitTestPersistentQueue();
+        using var queue = new UnitTestPersistentQueue(hasMaxSize);
         queue.EnqueueMany(2);
 
         // Act
@@ -26,11 +27,12 @@ public class DequeueAsync_Commit
         CollectionAssert.AreEqual(results1.Items[0].ToArray(), results3.Items[0].ToArray());
     }
 
-    [Test]
-    public async Task WithCommit_NewElementsAreReturned()
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task WithCommit_NewElementsAreReturned(bool hasMaxSize)
     {
         // Arrange
-        using var queue = new UnitTestPersistentQueue();
+        using var queue = new UnitTestPersistentQueue(hasMaxSize);
         queue.EnqueueMany(10);
 
         // Act

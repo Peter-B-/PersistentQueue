@@ -1,16 +1,17 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using Shouldly;
 
-namespace PersistentQueue.Tests.PersistentQueueTests;
+namespace PersistentQueue.Tests.PersistentQueueTests.Dequeue;
 
 [TestFixture]
 public class DequeueAsync
 {
-    [Test]
-    public void Cancel_ShouldThrowException()
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Cancel_ShouldThrowException(bool hasMaxSize)
     {
         // Arrange
-        using var queue = new UnitTestPersistentQueue();
+        using var queue = new UnitTestPersistentQueue(hasMaxSize);
 
         var cts = new CancellationTokenSource();
 
@@ -21,11 +22,12 @@ public class DequeueAsync
         Should.ThrowAsync<OperationCanceledException>(async () => await resultTask);
     }
 
-    [Test]
-    public async Task EmptyQueue_WaitForNextItem()
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task EmptyQueue_WaitForNextItem(bool hasMaxSize)
     {
         // Arrange
-        using var queue = new UnitTestPersistentQueue();
+        using var queue = new UnitTestPersistentQueue(hasMaxSize);
 
         // Act & Assert
         var resultTask = queue.DequeueAsync(1, 2);
@@ -37,11 +39,12 @@ public class DequeueAsync
         result.Items.Count.ShouldBe(1);
     }
 
-    [Test]
-    public async Task ItemsInQueue_ReturnAll()
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task ItemsInQueue_ReturnAll(bool hasMaxSize)
     {
         // Arrange
-        using var queue = new UnitTestPersistentQueue();
+        using var queue = new UnitTestPersistentQueue(hasMaxSize);
         queue.EnqueueMany(2);
 
         // Act
@@ -51,11 +54,12 @@ public class DequeueAsync
         result.Items.Count.ShouldBe(2);
     }
 
-    [Test]
-    public void ItemsInQueue_ReturnsSynchronous()
+    [TestCase(true)]
+    [TestCase(false)]
+    public void ItemsInQueue_ReturnsSynchronous(bool hasMaxSize)
     {
         // Arrange
-        using var queue = new UnitTestPersistentQueue();
+        using var queue = new UnitTestPersistentQueue(hasMaxSize);
         queue.EnqueueMany(2);
 
         // Act
@@ -65,11 +69,12 @@ public class DequeueAsync
         resultTask.IsCompleted.ShouldBeTrue();
     }
 
-    [Test]
-    public async Task LessThanMaxItemsInQueue_ReturnsAvailable()
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task LessThanMaxItemsInQueue_ReturnsAvailable(bool hasMaxSize)
     {
         // Arrange
-        using var queue = new UnitTestPersistentQueue();
+        using var queue = new UnitTestPersistentQueue(hasMaxSize);
         queue.EnqueueMany(2);
 
         // Act
@@ -79,11 +84,12 @@ public class DequeueAsync
         result.Items.Count.ShouldBe(2);
     }
 
-    [Test]
-    public void WaitAndCancel()
+    [TestCase(true)]
+    [TestCase(false)]
+    public void WaitAndCancel(bool hasMaxSize)
     {
         // Arrange
-        using var queue = new UnitTestPersistentQueue();
+        using var queue = new UnitTestPersistentQueue(hasMaxSize);
 
         var cts = new CancellationTokenSource();
 
@@ -97,11 +103,12 @@ public class DequeueAsync
     }
 
 
-    [Test]
-    public void WaitForMinElements()
+    [TestCase(true)]
+    [TestCase(false)]
+    public void WaitForMinElements(bool hasMaxSize)
     {
         // Arrange
-        using var queue = new UnitTestPersistentQueue();
+        using var queue = new UnitTestPersistentQueue(hasMaxSize);
 
         // Act & Assert
         var resultTask = queue.DequeueAsync(10, 12);

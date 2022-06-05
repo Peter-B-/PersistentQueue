@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 namespace PersistentQueue.Tests;
 
@@ -18,7 +18,12 @@ public static class QueueExtensions
 
     public static void EnqueueManySized(this Persistent.Queue.PersistentQueue queue, int count, int byteSize)
     {
-        Enumerable.Range(1, count)
-            .ForEach(_ => queue.Enqueue(new byte[byteSize]));
+        for (var i = 0; i < count; i++)
+            queue.EnqueueSized(byteSize);
+    }
+
+    public static void EnqueueSized(this Persistent.Queue.PersistentQueue queue, int byteSize)
+    {
+        queue.Enqueue(new byte[byteSize]);
     }
 }
