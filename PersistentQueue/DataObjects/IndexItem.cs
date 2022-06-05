@@ -1,20 +1,10 @@
-﻿using System.IO;
-
-namespace Persistent.Queue.DataObjects;
+﻿namespace Persistent.Queue.DataObjects;
 
 public class IndexItem
 {
     public long DataPageIndex { get; set; }
-    public long ItemOffset { get; set; }
     public long ItemLength { get; set; }
-
-    public void WriteToStream(Stream s)
-    {
-        using var bw = new BinaryWriter(s);
-        bw.Write(DataPageIndex);
-        bw.Write(ItemOffset);
-        bw.Write(ItemLength);
-    }
+    public long ItemOffset { get; set; }
 
     public static IndexItem ReadFromStream(Stream s)
     {
@@ -37,5 +27,13 @@ public class IndexItem
     public override string ToString()
     {
         return $"Page {DataPageIndex}, @ {ItemOffset}, {ItemLength} bytes";
+    }
+
+    public void WriteToStream(Stream s)
+    {
+        using var bw = new BinaryWriter(s);
+        bw.Write(DataPageIndex);
+        bw.Write(ItemOffset);
+        bw.Write(ItemLength);
     }
 }

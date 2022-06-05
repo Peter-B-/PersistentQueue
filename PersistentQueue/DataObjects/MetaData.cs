@@ -1,20 +1,9 @@
-﻿using System.IO;
-
-namespace Persistent.Queue.DataObjects;
+﻿namespace Persistent.Queue.DataObjects;
 
 internal class MetaData
 {
     public long HeadIndex { get; set; }
     public long TailIndex { get; set; }
-
-    public void WriteToStream(Stream s)
-    {
-        using (var bw = new BinaryWriter(s))
-        {
-            bw.Write(HeadIndex);
-            bw.Write(TailIndex);
-        }
-    }
 
     public static MetaData ReadFromStream(Stream s)
     {
@@ -31,5 +20,14 @@ internal class MetaData
     public static long Size()
     {
         return 2 * sizeof(long);
+    }
+
+    public void WriteToStream(Stream s)
+    {
+        using (var bw = new BinaryWriter(s))
+        {
+            bw.Write(HeadIndex);
+            bw.Write(TailIndex);
+        }
     }
 }

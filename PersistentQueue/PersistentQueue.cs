@@ -1,7 +1,3 @@
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Nito.AsyncEx;
 using Persistent.Queue.DataObjects;
 using Persistent.Queue.Interfaces;
@@ -14,16 +10,15 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
 {
     // Page factories
     private readonly IPageFactory _dataPageFactory;
-    private readonly IPageFactory _indexPageFactory;
-    private readonly IPageFactory _metaPageFactory;
 
     private readonly long _dataPageSize;
     private readonly long _indexItemSize;
+    private readonly IPageFactory _indexPageFactory;
     private readonly object _lockObject = new();
     private readonly long _metaDataItemSize;
+    private readonly IPageFactory _metaPageFactory;
 
     private readonly QueueStateMonitor _queueMonitor;
-    protected PersistentQueueConfiguration Configuration { get; }
 
     // MetaData
     private MetaData _metaData;
@@ -61,12 +56,45 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
         _queueMonitor = QueueStateMonitor.Initialize(_metaData!.TailIndex);
     }
 
-    public bool HasItems => _metaData.TailIndex - _metaData.HeadIndex > 0;
+    protected PersistentQueueConfiguration Configuration { get; }
 
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
+    }
+
+    public Task<IDequeueResult> DequeueAsync(CancellationToken token = default)
+    {
+        return DequeueAsync(Configuration.MinDequeueBatchSize, Configuration.MaxDequeueBatchSize, token);
+    }
+
+    public async Task<IDequeueResult> DequeueAsync(int minItems, int maxItems, CancellationToken token = default)
+    {
+        if (minItems < 1) minItems = 1;
+        if (maxItems < minItems) maxItems = minItems;
+
+        var queueState = _queueMonitor.GetCurrent();
+
+        var headIndex = _metaData.HeadIndex;
+
+        while (queueState.TailIndex - headIndex < minItems)
+            queueState = await queueState.NextUpdate
+                .WaitAsync(token)
+                .ConfigureAwait(false);
+
+        var availableElements = queueState.TailIndex - headIndex;
+        var noOfItems = (int) Math.Min(availableElements, maxItems);
+
+        var data =
+            Enumerable.Range(0, noOfItems)
+                .Select(offset => headIndex + offset)
+                .Select(ReadItem)
+                .ToList();
+
+
+        var result = new DequeueResult(data, new ItemRange(headIndex, noOfItems), CommitBatch, RejectBatch);
+        return result;
     }
 
     public void Enqueue(ReadOnlySpan<byte> itemData)
@@ -130,38 +158,7 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
         }
     }
 
-    public Task<IDequeueResult> DequeueAsync(CancellationToken token = default)
-    {
-        return DequeueAsync(Configuration.MinDequeueBatchSize, Configuration.MaxDequeueBatchSize, token);
-    }
-
-    public async Task<IDequeueResult> DequeueAsync(int minItems, int maxItems, CancellationToken token = default)
-    {
-        if (minItems < 1) minItems = 1;
-        if (maxItems < minItems) maxItems = minItems;
-
-        var queueState = _queueMonitor.GetCurrent();
-
-        var headIndex = _metaData.HeadIndex;
-
-        while (queueState.TailIndex - headIndex < minItems)
-            queueState = await queueState.NextUpdate
-                .WaitAsync(token)
-                .ConfigureAwait(false);
-
-        var availableElements = queueState.TailIndex - headIndex;
-        var noOfItems = (int) Math.Min(availableElements, maxItems);
-
-        var data =
-            Enumerable.Range(0, noOfItems)
-                .Select(offset => headIndex + offset)
-                .Select(ReadItem)
-                .ToList();
-
-
-        var result = new DequeueResult(data, new ItemRange(headIndex, noOfItems), CommitBatch, RejectBatch);
-        return result;
-    }
+    public bool HasItems => _metaData.TailIndex - _metaData.HeadIndex > 0;
 
     public QueueStatistics GetStatistics()
     {
@@ -170,86 +167,22 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
 
         var dataSize = GetDataSize(headIndex, tailIndex);
 
-        return new QueueStatistics()
+        return new QueueStatistics
         {
-            QueueLength =  tailIndex - headIndex,
+            QueueLength = tailIndex - headIndex,
             QueueDataSizeEstimate = dataSize,
             TotalEnqueuedItems = tailIndex
         };
     }
 
-    private long GetDataSize(long headIndex, long tailIndex)
+    protected virtual void Dispose(bool disposing)
     {
-        if (headIndex == tailIndex) return 0;
-            
-        var headIndexItem = GetIndexItem(headIndex);
-        var tailIndexItem = GetIndexItem(tailIndex - 1);
-
-        var dataSize = IndexItemHelper.EstimateQueueDataSize(headIndexItem, tailIndexItem, _dataPageSize);
-        return dataSize;
-    }
-
-    private void InitializeMetaData()
-    {
-        var metaPage = _metaPageFactory.GetPage(0);
-        using (var readStream = metaPage.GetReadStream(0, _metaDataItemSize))
+        if (disposing)
         {
-            _metaData = MetaData.ReadFromStream(readStream);
+            _metaPageFactory?.Dispose();
+            _indexPageFactory?.Dispose();
+            _dataPageFactory?.Dispose();
         }
-
-        // Update local data pointers from previously persisted index item
-        var prevTailIndex = GetPreviousIndex(_metaData.TailIndex);
-        var prevTailIndexItem = GetIndexItem(prevTailIndex);
-        _tailDataPageIndex = prevTailIndexItem.DataPageIndex;
-        _tailDataItemOffset = prevTailIndexItem.ItemOffset + prevTailIndexItem.ItemLength;
-    }
-
-    private long GetIndexPageIndex(long index)
-    {
-        return index / Configuration.IndexItemsPerPage;
-    }
-
-    private long GetIndexItemOffset(long index)
-    {
-        return index % Configuration.IndexItemsPerPage * _indexItemSize;
-    }
-
-    private static long GetPreviousIndex(long index)
-    {
-        if (index > 0)
-            return index - 1;
-
-        return index;
-    }
-
-    private IndexItem GetIndexItem(long index)
-    {
-        IndexItem indexItem;
-
-        var indexPage = _indexPageFactory.GetPage(GetIndexPageIndex(index));
-        using (var stream = indexPage.GetReadStream(GetIndexItemOffset(index), _indexItemSize))
-        {
-            indexItem = IndexItem.ReadFromStream(stream);
-        }
-
-        _indexPageFactory.ReleasePage(indexPage.Index);
-
-        return indexItem;
-    }
-
-    private void PersistMetaData()
-    {
-        var metaPage = _metaPageFactory.GetPage(0);
-        using (var writeStream = metaPage.GetWriteStream(0, _metaDataItemSize))
-        {
-            _metaData.WriteToStream(writeStream);
-        }
-
-        _metaPageFactory.ReleasePage(0);
-    }
-
-    private void RejectBatch(ItemRange range)
-    {
     }
 
     private void CommitBatch(ItemRange range)
@@ -286,6 +219,76 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
         }
     }
 
+    private long GetDataSize(long headIndex, long tailIndex)
+    {
+        if (headIndex == tailIndex) return 0;
+
+        var headIndexItem = GetIndexItem(headIndex);
+        var tailIndexItem = GetIndexItem(tailIndex - 1);
+
+        var dataSize = IndexItemHelper.EstimateQueueDataSize(headIndexItem, tailIndexItem, _dataPageSize);
+        return dataSize;
+    }
+
+    private IndexItem GetIndexItem(long index)
+    {
+        IndexItem indexItem;
+
+        var indexPage = _indexPageFactory.GetPage(GetIndexPageIndex(index));
+        using (var stream = indexPage.GetReadStream(GetIndexItemOffset(index), _indexItemSize))
+        {
+            indexItem = IndexItem.ReadFromStream(stream);
+        }
+
+        _indexPageFactory.ReleasePage(indexPage.Index);
+
+        return indexItem;
+    }
+
+    private long GetIndexItemOffset(long index)
+    {
+        return index % Configuration.IndexItemsPerPage * _indexItemSize;
+    }
+
+    private long GetIndexPageIndex(long index)
+    {
+        return index / Configuration.IndexItemsPerPage;
+    }
+
+    private static long GetPreviousIndex(long index)
+    {
+        if (index > 0)
+            return index - 1;
+
+        return index;
+    }
+
+    private void InitializeMetaData()
+    {
+        var metaPage = _metaPageFactory.GetPage(0);
+        using (var readStream = metaPage.GetReadStream(0, _metaDataItemSize))
+        {
+            _metaData = MetaData.ReadFromStream(readStream);
+        }
+
+        // Update local data pointers from previously persisted index item
+        var prevTailIndex = GetPreviousIndex(_metaData.TailIndex);
+        var prevTailIndexItem = GetIndexItem(prevTailIndex);
+        _tailDataPageIndex = prevTailIndexItem.DataPageIndex;
+        _tailDataItemOffset = prevTailIndexItem.ItemOffset + prevTailIndexItem.ItemLength;
+    }
+
+    private void PersistMetaData()
+    {
+        var metaPage = _metaPageFactory.GetPage(0);
+        using (var writeStream = metaPage.GetWriteStream(0, _metaDataItemSize))
+        {
+            _metaData.WriteToStream(writeStream);
+        }
+
+        _metaPageFactory.ReleasePage(0);
+    }
+
     private Memory<byte> ReadItem(long itemIndex)
     {
         // Get index item for head index
@@ -307,13 +310,7 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
         return buffer;
     }
 
-    protected virtual void Dispose(bool disposing)
+    private void RejectBatch(ItemRange range)
     {
-        if (disposing)
-        {
-            _metaPageFactory?.Dispose();
-            _indexPageFactory?.Dispose();
-            _dataPageFactory?.Dispose();
-        }
     }
 }

@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace Persistent.Queue.Utils;
+﻿namespace Persistent.Queue.Utils;
 
 public sealed class QueueState : IQueueState
 {
@@ -11,8 +9,9 @@ public sealed class QueueState : IQueueState
         TailIndex = tailIndex;
     }
 
-    public long TailIndex { get; }
     public Task<IQueueState> NextUpdate => _updateTcs.Task;
+
+    public long TailIndex { get; }
 
     public void Update(IQueueState newState)
     {

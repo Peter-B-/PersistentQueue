@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Persistent.Queue.Cache;
 
@@ -68,7 +62,21 @@ public class Cache<TKey, TValue> : ICache<TKey, TValue> where TKey : notnull
         }
     }
 
-    public bool TryRemoveValue(TKey key, [NotNullWhen(true)]out TValue? value)
+    public void Release(TKey key)
+    {
+        _lock.EnterReadLock();
+        try
+        {
+            if (_items.TryGetValue(key, out var item))
+                item.DecreaseRefCount();
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }
+
+    public bool TryRemoveValue(TKey key, [NotNullWhen(true)] out TValue? value)
     {
         _lock.EnterWriteLock();
         try
@@ -89,18 +97,10 @@ public class Cache<TKey, TValue> : ICache<TKey, TValue> where TKey : notnull
         }
     }
 
-    public void Release(TKey key)
+    public void Dispose()
     {
-        _lock.EnterReadLock();
-        try
-        {
-            if (_items.TryGetValue(key, out var item))
-                item.DecreaseRefCount();
-        }
-        finally
-        {
-            _lock.ExitReadLock();
-        }
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
 
@@ -117,6 +117,40 @@ public class Cache<TKey, TValue> : ICache<TKey, TValue> where TKey : notnull
         finally
         {
             _lock.ExitWriteLock();
+        }
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _cts.Cancel();
+
+            RemoveAll();
+
+            // Wait until write lock becomes available.
+            // If this is the case, The CleanupLoop must have finished.
+            _lock.EnterWriteLock();
+            _lock.ExitWriteLock();
+            _lock.Dispose();
+
+            _cts.Dispose();
+        }
+    }
+
+    private async void CleanupLoop()
+    {
+        try
+        {
+            while (!_cts.IsCancellationRequested)
+            {
+                RemoveOldItems();
+                await Task.Delay(_ttl / 2, _cts.Token);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // ignore
         }
     }
 
@@ -155,50 +189,8 @@ public class Cache<TKey, TValue> : ICache<TKey, TValue> where TKey : notnull
         }
     }
 
-    private async void CleanupLoop()
-    {
-        try
-        {
-            while (!_cts.IsCancellationRequested)
-            {
-                RemoveOldItems();
-                await Task.Delay(_ttl / 2, _cts.Token);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // ignore
-        }
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            _cts.Cancel();
-
-            RemoveAll();
-
-            // Wait until write lock becomes available.
-            // If this is the case, The CleanupLoop must have finished.
-            _lock.EnterWriteLock();
-            _lock.ExitWriteLock();
-            _lock.Dispose();
-
-            _cts.Dispose();
-        }
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
     private class CacheItem
     {
-        public TKey Key { get; }
-        public TValue Value { get; }
         public DateTime LastAccessTimestamp = DateTime.Now;
         public long RefCount;
 
@@ -208,15 +200,18 @@ public class Cache<TKey, TValue> : ICache<TKey, TValue> where TKey : notnull
             Key = key;
         }
 
-        public void IncreaseRefCount()
-        {
-            Interlocked.Increment(ref RefCount);
-            LastAccessTimestamp = DateTime.Now;
-        }
+        public TKey Key { get; }
+        public TValue Value { get; }
 
         public void DecreaseRefCount()
         {
             Interlocked.Decrement(ref RefCount);
+        }
+
+        public void IncreaseRefCount()
+        {
+            Interlocked.Increment(ref RefCount);
+            LastAccessTimestamp = DateTime.Now;
         }
     }
 }

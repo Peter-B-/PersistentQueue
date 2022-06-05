@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using System.IO.MemoryMappedFiles;
 using Persistent.Queue.Interfaces.Intern;
 
@@ -19,7 +17,17 @@ internal class Page : IPage
                                                MemoryMappedFileAccess.ReadWrite);
     }
 
-    public long Index { get; }
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    public void Delete()
+    {
+        Dispose(true);
+        DeleteFile(_pageFile);
+    }
 
     public Stream GetReadStream(long position, long length)
     {
@@ -35,17 +43,7 @@ internal class Page : IPage
         return _mmf.CreateViewStream(position, length, MemoryMappedFileAccess.Write);
     }
 
-    public void Delete()
-    {
-        Dispose(true);
-        DeleteFile(_pageFile);
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
+    public long Index { get; }
 
     public static void DeleteFile(string filePath)
     {

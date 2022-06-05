@@ -1,6 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-
 namespace Persistent.Queue.Interfaces;
 
 public interface IDequeueResult

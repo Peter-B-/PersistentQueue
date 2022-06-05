@@ -1,12 +1,10 @@
-﻿using System;
-using System.IO;
-using Persistent.Queue;
+﻿using Persistent.Queue;
 
 namespace PersistentQueue.Tests;
 
 public class UnitTestQueueConfiguration : PersistentQueueConfiguration
 {
-    public UnitTestQueueConfiguration():base(GetTempPath(), 10*1024)
+    public UnitTestQueueConfiguration() : base(GetTempPath(), 10 * 1024)
     {
         IndexItemsPerPage = 200;
     }

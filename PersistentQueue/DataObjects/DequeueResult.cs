@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Persistent.Queue.Interfaces;
+﻿using Persistent.Queue.Interfaces;
 
 namespace Persistent.Queue.DataObjects;
 
@@ -18,12 +16,12 @@ internal class DequeueResult : IDequeueResult
         Items = data;
     }
 
-    public IReadOnlyList<Memory<byte>> Items { get; }
-
     public void Commit()
     {
         _commitCallBack(_itemRange);
     }
+
+    public IReadOnlyList<Memory<byte>> Items { get; }
 
     public void Reject()
     {

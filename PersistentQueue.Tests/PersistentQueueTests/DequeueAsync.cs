@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Shouldly;
 
 namespace PersistentQueue.Tests.PersistentQueueTests;
@@ -9,6 +6,21 @@ namespace PersistentQueue.Tests.PersistentQueueTests;
 [TestFixture]
 public class DequeueAsync
 {
+    [Test]
+    public void Cancel_ShouldThrowException()
+    {
+        // Arrange
+        using var queue = new UnitTestPersistentQueue();
+
+        var cts = new CancellationTokenSource();
+
+        // Act & Assert
+        var resultTask = queue.DequeueAsync(10, 12, cts.Token);
+
+        cts.Cancel();
+        Should.ThrowAsync<OperationCanceledException>(async () => await resultTask);
+    }
+
     [Test]
     public async Task EmptyQueue_WaitForNextItem()
     {
@@ -67,25 +79,6 @@ public class DequeueAsync
         result.Items.Count.ShouldBe(2);
     }
 
-
-    [Test]
-    public void WaitForMinElements()
-    {
-        // Arrange
-        using var queue = new UnitTestPersistentQueue();
-
-        // Act & Assert
-        var resultTask = queue.DequeueAsync(10, 12);
-        for (var i = 0; i < 4; i++)
-        {
-            queue.EnqueueMany(2);
-            resultTask.IsCompleted.ShouldBeFalse();
-        }
-
-        queue.EnqueueMany(2);
-        resultTask.IsCompleted.ShouldBeTrue();
-    }
-
     [Test]
     public void WaitAndCancel()
     {
@@ -103,18 +96,22 @@ public class DequeueAsync
         resultTask.IsCanceled.ShouldBeTrue();
     }
 
+
     [Test]
-    public void Cancel_ShouldThrowException()
+    public void WaitForMinElements()
     {
         // Arrange
         using var queue = new UnitTestPersistentQueue();
 
-        var cts = new CancellationTokenSource();
-
         // Act & Assert
-        var resultTask = queue.DequeueAsync(10, 12, cts.Token);
+        var resultTask = queue.DequeueAsync(10, 12);
+        for (var i = 0; i < 4; i++)
+        {
+            queue.EnqueueMany(2);
+            resultTask.IsCompleted.ShouldBeFalse();
+        }
 
-        cts.Cancel();
-        Should.ThrowAsync<OperationCanceledException>(async () => await resultTask);
+        queue.EnqueueMany(2);
+        resultTask.IsCompleted.ShouldBeTrue();
     }
 }

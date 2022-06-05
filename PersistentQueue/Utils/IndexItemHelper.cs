@@ -16,16 +16,16 @@ public static class IndexItemHelper
             if (tailItem.ItemOffset < headItem.ItemOffset)
                 // Invalid: head behind tail
                 return 0L;
-                    
+
             // head and tail are on same page
             return tailItem.ItemOffset - headItem.ItemOffset + tailItem.ItemLength;
         }
 
         return
             // rest of head page
-            dataPageSize- headItem.ItemOffset+
+            dataPageSize - headItem.ItemOffset +
             // pages between head and tail
-            (filledPages-1) * dataPageSize +
+            (filledPages - 1) * dataPageSize +
             // top of tail page
             tailItem.ItemOffset + tailItem.ItemLength;
     }

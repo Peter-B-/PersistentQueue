@@ -1,6 +1,4 @@
-﻿using System.Threading;
-
-namespace Persistent.Queue.Utils;
+﻿namespace Persistent.Queue.Utils;
 
 public sealed class QueueStateMonitor
 {
@@ -9,6 +7,11 @@ public sealed class QueueStateMonitor
     private QueueStateMonitor(long initialTailIndex)
     {
         _currentState = new QueueState(initialTailIndex);
+    }
+
+    public IQueueState GetCurrent()
+    {
+        return _currentState;
     }
 
     public static QueueStateMonitor Initialize(long tailIndex)
@@ -27,10 +30,5 @@ public sealed class QueueStateMonitor
         } while (Interlocked.CompareExchange(ref _currentState, newState, oldState) != oldState);
 
         oldState?.Update(newState);
-    }
-
-    public IQueueState GetCurrent()
-    {
-        return _currentState;
     }
 }
