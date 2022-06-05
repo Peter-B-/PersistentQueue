@@ -37,7 +37,7 @@ public class PersistentQueueConfiguration
     ///         <list type="bullet">
     ///             <item>There are currently no more items in the PersistentQueue.</item>
     ///             <item>There are <c>MaxDequeueBatchSize</c> items in the current batch.</item>
-    ///             <item>There combined size of the items would exceed <c>MaxDequeueBatchSizeInByte</c> items, if the next item is added.</item>
+    ///             <item>There combined size of the items would exceed <c>MaxDequeueBatchSizeInBytes</c> items, if the next item is added.</item>
     ///         </list>
     ///     </para>
     /// </summary>
@@ -52,21 +52,21 @@ public class PersistentQueueConfiguration
     ///         enqueued.
     ///     </para>
     /// </summary>
-    public long? MaxDequeueBatchSizeInByte { get; set; }
+    public long? MaxDequeueBatchSizeInBytes { get; set; }
 
     /// <summary>
     ///     <list type="table">
     ///         <listheader>
     ///             <term>true</term>
-    ///             <description>An InvalidOperationException is thrown, if an item exceeding <c>MaxDequeueBatchSizeInByte</c> is enqueued.</description>
+    ///             <description>An InvalidOperationException is thrown, if an item exceeding <c>MaxDequeueBatchSizeInBytes</c> is enqueued.</description>
     ///         </listheader>
     ///         <item>
     ///             <term>false</term>
-    ///             <description>Items exceeding <c>MaxDequeueBatchSizeInByte</c> can be enqueued.</description>
+    ///             <description>Items exceeding <c>MaxDequeueBatchSizeInBytes</c> can be enqueued.</description>
     ///         </item>
     ///     </list>
     /// </summary>
-    public bool ThrowExceptionWhenItemExceedingMaxDequeueBatchSizeIsEnqueued { get; set; }
+    public bool ThrowExceptionWhenItemExceedingMaxDequeueBatchSizeIsEnqueued { get; set; } = true;
 
     public string GetMetaPath() => Path.Combine(QueuePath, MetaPageFolder);
     public string GetIndexPath() => Path.Combine(QueuePath, IndexPageFolder);

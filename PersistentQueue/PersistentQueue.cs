@@ -88,8 +88,8 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
         var noOfItems = (int) Math.Min(availableElements, maxItems);
 
         var data =
-            Configuration.MaxDequeueBatchSizeInByte.HasValue
-                ? ReadItemsWithSizeLimit(headIndex, noOfItems, Configuration.MaxDequeueBatchSizeInByte.Value)
+            Configuration.MaxDequeueBatchSizeInBytes.HasValue
+                ? ReadItemsWithSizeLimit(headIndex, noOfItems, Configuration.MaxDequeueBatchSizeInBytes.Value)
                 : ReadItems(headIndex, noOfItems);
 
 
@@ -108,11 +108,11 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
                                                   "Item data length is greater than queue data page size");
 
         if (Configuration.ThrowExceptionWhenItemExceedingMaxDequeueBatchSizeIsEnqueued &&
-            Configuration.MaxDequeueBatchSizeInByte.HasValue &&
-            itemData.Length > Configuration.MaxDequeueBatchSizeInByte.Value
+            Configuration.MaxDequeueBatchSizeInBytes.HasValue &&
+            itemData.Length > Configuration.MaxDequeueBatchSizeInBytes.Value
            )
             throw new InvalidOperationException(
-                $"Item is larger than {nameof(Configuration.MaxDequeueBatchSizeInByte)} ({itemData.Length}, {Configuration.MaxDequeueBatchSizeInByte}) and cannot be enqueued.");
+                $"Item is larger than {nameof(Configuration.MaxDequeueBatchSizeInBytes)} ({itemData.Length}, {Configuration.MaxDequeueBatchSizeInBytes}) and cannot be enqueued.");
 
         lock (_lockObject)
         {

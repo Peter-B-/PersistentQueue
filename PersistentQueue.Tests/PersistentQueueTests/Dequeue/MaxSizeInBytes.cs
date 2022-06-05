@@ -16,7 +16,7 @@ public class MaxSizeInBytes
         //Arrange
         var config = new UnitTestQueueConfiguration
         {
-            MaxDequeueBatchSizeInByte = maxSize,
+            MaxDequeueBatchSizeInBytes = maxSize,
             MaxDequeueBatchSize = 8,
         };
 
@@ -37,8 +37,9 @@ public class MaxSizeInBytes
         //Arrange
         var config = new UnitTestQueueConfiguration
         {
-            MaxDequeueBatchSizeInByte = 32,
+            MaxDequeueBatchSizeInBytes = 32,
             MaxDequeueBatchSize = 8,
+            ThrowExceptionWhenItemExceedingMaxDequeueBatchSizeIsEnqueued = false
         };
 
         using var queue = new UnitTestPersistentQueue(config);
@@ -69,8 +70,9 @@ public class MaxSizeInBytes
         //Arrange
         var config = new UnitTestQueueConfiguration
         {
-            MaxDequeueBatchSizeInByte = 2,
+            MaxDequeueBatchSizeInBytes = 2,
             MaxDequeueBatchSize = 8,
+            ThrowExceptionWhenItemExceedingMaxDequeueBatchSizeIsEnqueued = false
         };
 
         using var queue = new UnitTestPersistentQueue(config);

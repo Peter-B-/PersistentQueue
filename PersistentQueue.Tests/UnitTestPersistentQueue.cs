@@ -7,7 +7,7 @@ public class UnitTestPersistentQueue : Persistent.Queue.PersistentQueue
     public UnitTestPersistentQueue(bool hasMaxSize = false) :
         this(new UnitTestQueueConfiguration
         {
-            MaxDequeueBatchSizeInByte = hasMaxSize ? 16 << 10 : null
+            MaxDequeueBatchSizeInBytes = hasMaxSize ? 16 << 10 : null
         })
     {
     }
