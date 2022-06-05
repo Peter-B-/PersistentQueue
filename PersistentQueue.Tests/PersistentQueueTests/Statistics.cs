@@ -6,78 +6,77 @@ using NUnit.Framework;
 using Persistent.Queue.DataObjects;
 using Shouldly;
 
-namespace PersistentQueue.Tests.PersistentQueueTests
+namespace PersistentQueue.Tests.PersistentQueueTests;
+
+public class Statistics
 {
-    public class Statistics
+    [Test]
+    public void Enqueue10()
     {
-        [Test]
-        public void Enqueue10()
-        {
-            // Arrange
-            using var queue = new UnitTestPersistentQueue();
-            queue.EnqueueMany(10);
+        // Arrange
+        using var queue = new UnitTestPersistentQueue();
+        queue.EnqueueMany(10);
 
-            // Act
-            var statistics = queue.GetStatistics();
+        // Act
+        var statistics = queue.GetStatistics();
 
-            // Assert
-            var expectedDataSize =
-                Enumerable.Range(1, 10)
-                    .Select(itemNo => $"Message {itemNo}")
-                    .Select(Encoding.UTF8.GetBytes)
-                    .Select(bytes => bytes.LongLength)
-                    .Sum();
+        // Assert
+        var expectedDataSize =
+            Enumerable.Range(1, 10)
+                .Select(itemNo => $"Message {itemNo}")
+                .Select(Encoding.UTF8.GetBytes)
+                .Select(bytes => bytes.LongLength)
+                .Sum();
     
             
-            statistics.ShouldDeepEqual(new QueueStatistics()
-            {
-                QueueLength = 10,
-                QueueDataSizeEstimate = expectedDataSize,
-                TotalEnqueuedItems = 10
-            });
-        }
-
-        [Test]
-        public void Empty()
+        statistics.ShouldDeepEqual(new QueueStatistics()
         {
-            // Arrange
-            using var queue = new UnitTestPersistentQueue();
+            QueueLength = 10,
+            QueueDataSizeEstimate = expectedDataSize,
+            TotalEnqueuedItems = 10
+        });
+    }
 
-            // Act
-            var statistics = queue.GetStatistics();
+    [Test]
+    public void Empty()
+    {
+        // Arrange
+        using var queue = new UnitTestPersistentQueue();
 
-            // Assert
-            statistics.ShouldDeepEqual(new QueueStatistics()
-            {
-                QueueLength = 0,
-                QueueDataSizeEstimate = 0,
-                TotalEnqueuedItems = 0
-            });
-        }
+        // Act
+        var statistics = queue.GetStatistics();
 
-        [Test]
-        public async Task EnqueueAndDequeue10()
+        // Assert
+        statistics.ShouldDeepEqual(new QueueStatistics()
         {
-            // Arrange
-            using var queue = new UnitTestPersistentQueue();
-            queue.EnqueueMany(10);
+            QueueLength = 0,
+            QueueDataSizeEstimate = 0,
+            TotalEnqueuedItems = 0
+        });
+    }
 
-            for (var i = 0; i < 5; i++)
-            {
-                var result = await queue.DequeueAsync(1, 2);
-                result.Commit();
-            }
+    [Test]
+    public async Task EnqueueAndDequeue10()
+    {
+        // Arrange
+        using var queue = new UnitTestPersistentQueue();
+        queue.EnqueueMany(10);
 
-            // Act
-            var statistics = queue.GetStatistics();
-
-            // Assert
-            statistics.ShouldDeepEqual(new QueueStatistics()
-            {
-                QueueLength = 0,
-                QueueDataSizeEstimate = 0,
-                TotalEnqueuedItems = 10
-            });
+        for (var i = 0; i < 5; i++)
+        {
+            var result = await queue.DequeueAsync(1, 2);
+            result.Commit();
         }
+
+        // Act
+        var statistics = queue.GetStatistics();
+
+        // Assert
+        statistics.ShouldDeepEqual(new QueueStatistics()
+        {
+            QueueLength = 0,
+            QueueDataSizeEstimate = 0,
+            TotalEnqueuedItems = 10
+        });
     }
 }

@@ -5,71 +5,70 @@ using NUnit.Framework;
 using Persistent.Queue.Utils;
 using Shouldly;
 
-namespace PersistentQueue.Tests.Utils
+namespace PersistentQueue.Tests.Utils;
+
+[TestFixture]
+public class QueueStateMonitorTests
 {
-    [TestFixture]
-    public class QueueStateMonitorTests
+    [Test]
+    public void ManyAwaits()
     {
-        [Test]
-        public void ManyAwaits()
-        {
-            // Arrange
-            var sut = QueueStateMonitor.Initialize(0);
+        // Arrange
+        var sut = QueueStateMonitor.Initialize(0);
 
-            // Act
-            var waitingTasks =
-                Enumerable.Range(0, 5)
-                    .Select(_ => sut.GetCurrent().NextUpdate)
-                    .ToList();
+        // Act
+        var waitingTasks =
+            Enumerable.Range(0, 5)
+                .Select(_ => sut.GetCurrent().NextUpdate)
+                .ToList();
 
 
-            // Assert
-            waitingTasks.ShouldAllBe(t => t.IsCompleted == false);
-            sut.Update(12);
-            waitingTasks.ShouldAllBe(t => t.IsCompleted);
-            waitingTasks.ShouldAllBe(t => t.Result.TailIndex == 12);
-        }
+        // Assert
+        waitingTasks.ShouldAllBe(t => t.IsCompleted == false);
+        sut.Update(12);
+        waitingTasks.ShouldAllBe(t => t.IsCompleted);
+        waitingTasks.ShouldAllBe(t => t.Result.TailIndex == 12);
+    }
 
-        [Test]
-        public async Task PulsesBefore()
-        {
-            // Arrange
-            var sut = QueueStateMonitor.Initialize(0);
+    [Test]
+    public async Task PulsesBefore()
+    {
+        // Arrange
+        var sut = QueueStateMonitor.Initialize(0);
 
-            // Act
-            sut.Update(1);
-            sut.Update(2);
-            sut.Update(3);
+        // Act
+        sut.Update(1);
+        sut.Update(2);
+        sut.Update(3);
 
-            var state = sut.GetCurrent();
-            state.TailIndex.ShouldBe(3);
-            sut.Update(4);
-            var update = await state.NextUpdate;
+        var state = sut.GetCurrent();
+        state.TailIndex.ShouldBe(3);
+        sut.Update(4);
+        var update = await state.NextUpdate;
 
-            // Assert
-            update.TailIndex.ShouldBe(4);
-        }
+        // Assert
+        update.TailIndex.ShouldBe(4);
+    }
 
-        [Test]
-        public void ShouldContinueOnOtherThread()
-        {
-            // Arrange
-            var sut = QueueStateMonitor.Initialize(0);
-            ;
+    [Test]
+    public void ShouldContinueOnOtherThread()
+    {
+        // Arrange
+        var sut = QueueStateMonitor.Initialize(0);
+        ;
 
-            var pulseThreadId = Thread.CurrentThread.ManagedThreadId;
+        var pulseThreadId = Thread.CurrentThread.ManagedThreadId;
 
-            // Act
-            var waitThreadIdTask =
-                sut.GetCurrent().NextUpdate
-                    .ContinueWith(t => Thread.CurrentThread.ManagedThreadId);
+        // Act
+        var waitThreadIdTask =
+            sut.GetCurrent().NextUpdate
+                .ContinueWith(t => Thread.CurrentThread.ManagedThreadId);
 
-            sut.Update(0);
+        sut.Update(0);
 
-            // Assert
-            var waitThreadId = waitThreadIdTask.Result;
-            waitThreadId.ShouldNotBe(pulseThreadId);
-            waitThreadId.ShouldNotBe(Thread.CurrentThread.ManagedThreadId);
-        }
+        // Assert
+        var waitThreadId = waitThreadIdTask.Result;
+        waitThreadId.ShouldNotBe(pulseThreadId);
+        waitThreadId.ShouldNotBe(Thread.CurrentThread.ManagedThreadId);
     }
 }

@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Persistent.Queue.Interfaces
+namespace Persistent.Queue.Interfaces;
+
+public interface IDequeueResult
 {
-    public interface IDequeueResult
-    {
-        IReadOnlyList<Memory<byte>> Items { get; }
-        void Commit();
-        void Reject();
-    }
+    IReadOnlyList<Memory<byte>> Items { get; }
+    void Commit();
+    void Reject();
 }
