@@ -5,7 +5,7 @@
 
     <!-- Nuget -->
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.1.6</Version>
+    <Version>1.0.1</Version>
     <Authors>Peter-B-</Authors>
     <Description>A queue, persisted in local files, that can be consumed in batches. Intended as a local buffer for IoT devices.</Description>
     <PackageProjectUrl>https://github.com/Peter-B-/PersistentQueue</PackageProjectUrl>
