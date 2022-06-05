@@ -1,7 +1,6 @@
-﻿namespace Persistent.Queue
+﻿namespace Persistent.Queue;
+
+public static class PersistentQueueExtensions
 {
-    public static class PersistentQueueExtensions
-    {
-        public static PersistentQueue CreateQueue(this PersistentQueueConfiguration config) => new PersistentQueue(config);
-    }
+    public static PersistentQueue CreateQueue(this PersistentQueueConfiguration config) => new PersistentQueue(config);
 }

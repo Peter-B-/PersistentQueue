@@ -1,13 +1,9 @@
-using System;
-using System.IO;
+namespace Persistent.Queue.Interfaces.Intern;
 
-namespace Persistent.Queue.Interfaces.Intern
+internal interface IPage : IDisposable
 {
-    internal interface IPage : IDisposable
-    {
-        long Index { get; }
-        Stream GetWriteStream(long position, long length);
-        Stream GetReadStream(long position, long length);
-        void Delete();
-    }
+    long Index { get; }
+    void Delete();
+    Stream GetReadStream(long position, long length);
+    Stream GetWriteStream(long position, long length);
 }

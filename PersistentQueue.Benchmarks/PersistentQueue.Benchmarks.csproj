@@ -1,13 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
         <RootNamespace>Persistent.Queue.Benchmarks</RootNamespace>
         <OutputType>Exe</OutputType>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+      <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1,39 +1,33 @@
-﻿using System.IO;
+﻿namespace Persistent.Queue.DataObjects;
 
-namespace Persistent.Queue.DataObjects
+internal class MetaData
 {
-    internal class MetaData
+    public long HeadIndex { get; set; }
+    public long TailIndex { get; set; }
+
+    public static MetaData ReadFromStream(Stream s)
     {
-        public long HeadIndex { get; set; }
-        public long TailIndex { get; set; }
-
-        public void WriteToStream(Stream s)
+        using var br = new BinaryReader(s);
+        var ret = new MetaData
         {
-            using (var bw = new BinaryWriter(s))
-            {
-                bw.Write(HeadIndex);
-                bw.Write(TailIndex);
-            }
-        }
+            HeadIndex = br.ReadInt64(),
+            TailIndex = br.ReadInt64()
+        };
 
-        public static MetaData ReadFromStream(Stream s)
+        return ret;
+    }
+
+    public static long Size()
+    {
+        return 2 * sizeof(long);
+    }
+
+    public void WriteToStream(Stream s)
+    {
+        using (var bw = new BinaryWriter(s))
         {
-            MetaData ret = null;
-            using (var br = new BinaryReader(s))
-            {
-                ret = new MetaData
-                {
-                    HeadIndex = br.ReadInt64(),
-                    TailIndex = br.ReadInt64()
-                };
-            }
-
-            return ret;
-        }
-
-        public static long Size()
-        {
-            return 2 * sizeof(long);
+            bw.Write(HeadIndex);
+            bw.Write(TailIndex);
         }
     }
 }

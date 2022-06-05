@@ -1,14 +1,9 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
+﻿namespace Persistent.Queue.Interfaces;
 
-namespace Persistent.Queue.Interfaces
+public interface IPersistentQueue : IDisposable
 {
-    public interface IPersistentQueue : IDisposable
-    {
-        bool HasItems { get; }
-        void Enqueue(ReadOnlySpan<byte> itemData);
-        Task<IDequeueResult> DequeueAsync(CancellationToken token = default);
-        Task<IDequeueResult> DequeueAsync(int minItems, int maxItems, CancellationToken token = default);
-    }
+    bool HasItems { get; }
+    Task<IDequeueResult> DequeueAsync(CancellationToken token = default);
+    Task<IDequeueResult> DequeueAsync(int minItems, int maxItems, CancellationToken token = default);
+    void Enqueue(ReadOnlySpan<byte> itemData);
 }

@@ -1,9 +1,8 @@
 ﻿using Persistent.Queue.DataObjects;
 
-namespace Persistent.Queue.Interfaces
+namespace Persistent.Queue.Interfaces;
+
+public interface IPersistentQueueStatisticSource
 {
-    public interface IPersistentQueueStatisticSource
-    {
-        QueueStatistics GetStatistics();
-    }
+    QueueStatistics GetStatistics();
 }

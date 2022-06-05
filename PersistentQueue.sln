@@ -1,15 +1,23 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32505.173
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistentQueue", "PersistentQueue\PersistentQueue.csproj", "{0DAEA4F8-9F7C-4C55-B953-0CAC642F0089}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersistentQueue", "PersistentQueue\PersistentQueue.csproj", "{0DAEA4F8-9F7C-4C55-B953-0CAC642F0089}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "TestApp\TestApp.csproj", "{B84324C7-DF8E-473B-B2B0-5E3407B139B2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestApp", "TestApp\TestApp.csproj", "{B84324C7-DF8E-473B-B2B0-5E3407B139B2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistentQueue.Tests", "PersistentQueue.Tests\PersistentQueue.Tests.csproj", "{5A37513E-2A92-4CF6-8379-F62EE6D0A15D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersistentQueue.Tests", "PersistentQueue.Tests\PersistentQueue.Tests.csproj", "{5A37513E-2A92-4CF6-8379-F62EE6D0A15D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistentQueue.Benchmarks", "PersistentQueue.Benchmarks\PersistentQueue.Benchmarks.csproj", "{8D8B6EB2-6FF3-4C66-BE01-72635657679C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersistentQueue.Benchmarks", "PersistentQueue.Benchmarks\PersistentQueue.Benchmarks.csproj", "{8D8B6EB2-6FF3-4C66-BE01-72635657679C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BD39D218-3BEE-43F5-BF2C-7A3EEF0DE514}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		Directory.Build.props = Directory.Build.props
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,5 +44,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5E1501F0-0073-41C2-905D-E0D7616FA722}
 	EndGlobalSection
 EndGlobal

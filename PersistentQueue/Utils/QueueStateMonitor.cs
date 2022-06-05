@@ -1,37 +1,34 @@
-﻿using System.Threading;
+﻿namespace Persistent.Queue.Utils;
 
-namespace Persistent.Queue.Utils
+public sealed class QueueStateMonitor
 {
-    public sealed class QueueStateMonitor
+    private QueueState _currentState;
+
+    private QueueStateMonitor(long initialTailIndex)
     {
-        private QueueState _currentState;
+        _currentState = new QueueState(initialTailIndex);
+    }
 
-        private QueueStateMonitor(long initialTailIndex)
+    public IQueueState GetCurrent()
+    {
+        return _currentState;
+    }
+
+    public static QueueStateMonitor Initialize(long tailIndex)
+    {
+        return new QueueStateMonitor(tailIndex);
+    }
+
+    public void Update(long newTailIndex)
+    {
+        QueueState oldState;
+        QueueState newState;
+        do
         {
-            _currentState = new QueueState(initialTailIndex);
-        }
+            oldState = _currentState;
+            newState = new QueueState(newTailIndex);
+        } while (Interlocked.CompareExchange(ref _currentState, newState, oldState) != oldState);
 
-        public static QueueStateMonitor Initialize(long tailIndex)
-        {
-            return new QueueStateMonitor(tailIndex);
-        }
-
-        public void Update(long newTailIndex)
-        {
-            QueueState oldState;
-            QueueState newState;
-            do
-            {
-                oldState = _currentState;
-                newState = new QueueState(newTailIndex);
-            } while (Interlocked.CompareExchange(ref _currentState, newState, oldState) != oldState);
-
-            oldState?.Update(newState);
-        }
-
-        public IQueueState GetCurrent()
-        {
-            return _currentState;
-        }
+        oldState?.Update(newState);
     }
 }

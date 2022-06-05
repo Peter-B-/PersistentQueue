@@ -1,12 +1,13 @@
-using System;
+using System.Diagnostics.CodeAnalysis;
 
-namespace Persistent.Queue.Cache
+namespace Persistent.Queue.Cache;
+
+internal interface ICache<in TKey, TValue> : IDisposable
 {
-    internal interface ICache<in TKey, TValue>: IDisposable
-    {
-        TValue GetOrCreate(TKey key, Func<TValue> factory);
-        bool TryRemoveValue(TKey key, out TValue value);
+    TValue GetOrCreate(TKey key, Func<TValue> factory);
 
-        void Release(TKey key);
-    }
+    void Release(TKey key);
+
+
+    bool TryRemoveValue(TKey key, [NotNullWhen(true)] out TValue? value);
 }
