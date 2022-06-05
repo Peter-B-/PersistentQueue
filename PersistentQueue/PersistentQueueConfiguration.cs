@@ -1,7 +1,8 @@
-﻿using System.IO;
+using System.IO;
 
 namespace Persistent.Queue;
 
+[NoReorder]
 public class PersistentQueueConfiguration
 {
     public PersistentQueueConfiguration(string queuePath, long? dataPageSize = null)
