@@ -58,7 +58,7 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
 
         InitializeMetaData();
 
-        _queueMonitor = QueueStateMonitor.Initialize(_metaData.TailIndex);
+        _queueMonitor = QueueStateMonitor.Initialize(_metaData!.TailIndex);
     }
 
     public bool HasItems => _metaData.TailIndex - _metaData.HeadIndex > 0;
@@ -214,7 +214,7 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
         return index % Configuration.IndexItemsPerPage * _indexItemSize;
     }
 
-    private long GetPreviousIndex(long index)
+    private static long GetPreviousIndex(long index)
     {
         if (index > 0)
             return index - 1;

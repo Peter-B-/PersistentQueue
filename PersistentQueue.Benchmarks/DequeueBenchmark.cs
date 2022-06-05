@@ -1,11 +1,11 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 
 namespace Persistent.Queue.Benchmarks;
 
 public class DequeueBenchmark
 {
-    private PersistentQueue _queue;
+    private PersistentQueue? _queue;
 
     [Params(1000)]
     public int EnqueueCount { get; set; }
@@ -39,6 +39,8 @@ public class DequeueBenchmark
     [Benchmark]
     public async Task Dequeue()
     {
+        if (_queue == null) throw new ArgumentNullException(nameof(_queue));
+
         while (_queue.HasItems)
         {
             var result = await _queue.DequeueAsync(1, BatchSize);

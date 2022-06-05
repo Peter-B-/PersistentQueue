@@ -4,7 +4,7 @@ namespace Persistent.Queue.Benchmarks;
 
 public class EnqueueBenchmark
 {
-    private PersistentQueue _queue;
+    private PersistentQueue? _queue;
 
     [Params(100, 1000)]
     public int EnqueueCount { get; set; }
@@ -31,6 +31,8 @@ public class EnqueueBenchmark
     [Benchmark]
     public void Enqueue()
     {
+        if (_queue == null) throw new ArgumentNullException(nameof(_queue));
+
         var data = new byte[ItemSize];
         for (var i = 0; i < EnqueueCount; i++)
             _queue.Enqueue(data);

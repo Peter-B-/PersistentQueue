@@ -5,8 +5,8 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>10.0</LangVersion>
     <AnalysisLevel>latest-Recommended</AnalysisLevel>
-    <Nullable>disable</Nullable>
-    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
 
     <NoWarn>$(NoWarn)</NoWarn>
   </PropertyGroup>

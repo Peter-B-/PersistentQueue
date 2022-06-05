@@ -18,15 +18,12 @@ internal class MetaData
 
     public static MetaData ReadFromStream(Stream s)
     {
-        MetaData ret = null;
-        using (var br = new BinaryReader(s))
+        using var br = new BinaryReader(s);
+        var ret = new MetaData
         {
-            ret = new MetaData
-            {
-                HeadIndex = br.ReadInt64(),
-                TailIndex = br.ReadInt64()
-            };
-        }
+            HeadIndex = br.ReadInt64(),
+            TailIndex = br.ReadInt64()
+        };
 
         return ret;
     }

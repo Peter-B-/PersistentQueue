@@ -1,17 +1,18 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Persistent.Queue.Cache;
 
-public class Cache<TKey, TValue> : ICache<TKey, TValue>
+public class Cache<TKey, TValue> : ICache<TKey, TValue> where TKey : notnull
 {
-    private readonly CancellationTokenSource _cts = new CancellationTokenSource();
-    private readonly Dictionary<TKey, CacheItem> _items = new Dictionary<TKey, CacheItem>();
-    private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
+    private readonly CancellationTokenSource _cts = new();
+    private readonly Dictionary<TKey, CacheItem> _items = new();
+    private readonly ReaderWriterLockSlim _lock = new();
     private readonly TimeSpan _ttl;
 
 
@@ -67,14 +68,14 @@ public class Cache<TKey, TValue> : ICache<TKey, TValue>
         }
     }
 
-    public bool TryRemoveValue(TKey key, out TValue value)
+    public bool TryRemoveValue(TKey key, [NotNullWhen(true)]out TValue? value)
     {
         _lock.EnterWriteLock();
         try
         {
             if (_items.TryGetValue(key, out var item))
             {
-                value = item.Value;
+                value = item.Value!;
                 _items.Remove(item.Key);
                 return true;
             }
