@@ -199,7 +199,7 @@ public class Cache<TKey, TValue> : ICache<TKey, TValue>
         public TKey Key { get; }
         public TValue Value { get; }
         public DateTime LastAccessTimestamp = DateTime.Now;
-        public long RefCount = 0;
+        public long RefCount;
 
         public CacheItem(TKey key, TValue value)
         {

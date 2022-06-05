@@ -19,11 +19,11 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
 
     private readonly long _dataPageSize;
     private readonly long _indexItemSize;
-    private readonly object _lockObject = new object();
+    private readonly object _lockObject = new();
     private readonly long _metaDataItemSize;
 
     private readonly QueueStateMonitor _queueMonitor;
-    protected readonly PersistentQueueConfiguration Configuration;
+    protected PersistentQueueConfiguration Configuration { get; }
 
     // MetaData
     private MetaData _metaData;

@@ -1,5 +1,5 @@
-﻿using System.Linq;
-using System.Threading;
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Persistent.Queue.Utils;
@@ -57,18 +57,18 @@ public class QueueStateMonitorTests
         var sut = QueueStateMonitor.Initialize(0);
         ;
 
-        var pulseThreadId = Thread.CurrentThread.ManagedThreadId;
+        var pulseThreadId = Environment.CurrentManagedThreadId;
 
         // Act
         var waitThreadIdTask =
             sut.GetCurrent().NextUpdate
-                .ContinueWith(t => Thread.CurrentThread.ManagedThreadId);
+                .ContinueWith(t => Environment.CurrentManagedThreadId);
 
         sut.Update(0);
 
         // Assert
         var waitThreadId = waitThreadIdTask.Result;
         waitThreadId.ShouldNotBe(pulseThreadId);
-        waitThreadId.ShouldNotBe(Thread.CurrentThread.ManagedThreadId);
+        waitThreadId.ShouldNotBe(Environment.CurrentManagedThreadId);
     }
 }

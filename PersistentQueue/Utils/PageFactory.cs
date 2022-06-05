@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using Persistent.Queue.Cache;
 using Persistent.Queue.Interfaces.Intern;
@@ -26,6 +27,23 @@ internal class PageFactory : IPageFactory
         _pageCache = new Cache<long, IPage>(cacheTtl ?? TimeSpan.FromSeconds(10));
     }
 
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    public void DeletePage(long index)
+    {
+        if (_disposed) throw new ObjectDisposedException(nameof(PageFactory));
+
+        if (_pageCache.TryRemoveValue(index, out var page))
+            page.Delete();
+        else
+            // If not found in cache, delete the file directly.
+            Page.DeleteFile(GetFilePath(index));
+    }
+
     public IPage GetPage(long index)
     {
         if (_disposed) throw new ObjectDisposedException(nameof(PageFactory));
@@ -40,28 +58,6 @@ internal class PageFactory : IPageFactory
         _pageCache.Release(index);
     }
 
-    public void DeletePage(long index)
-    {
-        if (_disposed) throw new ObjectDisposedException(nameof(PageFactory));
-
-        if (_pageCache.TryRemoveValue(index, out var page))
-            page.Delete();
-        else
-            // If not found in cache, delete the file directly.
-            Page.DeleteFile(GetFilePath(index));
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    private string GetFilePath(long index)
-    {
-        return Path.Combine(_pageDir, string.Format("{0}-{1}{2}", PageFileName, index, PageFileSuffix));
-    }
-
     protected void Dispose(bool disposing)
     {
         if (_disposed)
@@ -70,5 +66,10 @@ internal class PageFactory : IPageFactory
         if (disposing) _pageCache?.Dispose();
 
         _disposed = true;
+    }
+
+    private string GetFilePath(long index)
+    {
+        return Path.Combine(_pageDir, string.Format(CultureInfo.InvariantCulture, "{0}-{1}{2}", PageFileName, index, PageFileSuffix));
     }
 }

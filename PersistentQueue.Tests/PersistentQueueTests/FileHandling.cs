@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -12,7 +12,7 @@ namespace PersistentQueue.Tests.PersistentQueueTests;
 public class FileHandling
 {
     [Conditional("DEBUG")]
-    private void PrintFiles(string path)
+    private static void PrintFiles(string path)
     {
         var files = string.Join(Environment.NewLine, Directory.GetFiles(path).Select(Path.GetFileName));
 

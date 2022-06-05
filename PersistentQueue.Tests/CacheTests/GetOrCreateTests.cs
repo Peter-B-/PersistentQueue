@@ -14,7 +14,7 @@ public class GetOrCreateTests
         using var sut = new Cache<int, TestItem>(TimeSpan.FromSeconds(10));
 
         var first = sut.GetOrCreate(1, () => new TestItem(1));
-        var second = sut.GetOrCreate(1, () => throw new Exception("Second factory should not be invoked"));
+        var second = sut.GetOrCreate(1, () => throw new AssertionException( "Second factory should not be invoked"));
 
         first.ShouldBe(second);
         second.Id.ShouldBe(1);

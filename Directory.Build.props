@@ -11,10 +11,14 @@
     <NoWarn>$(NoWarn)</NoWarn>
   </PropertyGroup>
 
-  <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('Tests'))">
+  <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('.Tests'))">
     <IsPackable>false</IsPackable>
 
-    <NoWarn>$(NoWarn)</NoWarn>
+    <!--
+      CA1707	Remove the underscores from member name
+                Using underscore in unit test projects for readability of long method names.
+    -->
+    <NoWarn>$(NoWarn);CA1707</NoWarn>
   </PropertyGroup>
 
 </Project>
