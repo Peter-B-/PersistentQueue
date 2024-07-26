@@ -105,7 +105,7 @@ public class DequeueAsync
 
     [TestCase(true)]
     [TestCase(false)]
-    public void WaitForMinElements(bool hasMaxSize)
+    public async Task WaitForMinElements(bool hasMaxSize)
     {
         // Arrange
         using var queue = new UnitTestPersistentQueue(hasMaxSize);
@@ -119,6 +119,6 @@ public class DequeueAsync
         }
 
         queue.EnqueueMany(2);
-        resultTask.IsCompleted.ShouldBeTrue();
+        await resultTask;
     }
 }

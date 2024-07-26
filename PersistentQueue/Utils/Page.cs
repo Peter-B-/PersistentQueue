@@ -1,49 +1,31 @@
 using System.IO.MemoryMappedFiles;
-using Persistent.Queue.Interfaces.Intern;
 
 namespace Persistent.Queue.Utils;
 
-internal class Page : IPage
+internal sealed class Page(string pageFile, long pageSize, long pageIndex) : IDisposable
 {
-    private readonly MemoryMappedFile _mmf;
-    private readonly string _pageFile;
+    private readonly MemoryMappedFile _mmf = MemoryMappedFile.CreateFromFile(pageFile, FileMode.OpenOrCreate, null, pageSize,
+                                                                             MemoryMappedFileAccess.ReadWrite);
+
     private bool _disposed;
 
-    public Page(string pageFile, long pageSize, long pageIndex)
-    {
-        _pageFile = pageFile;
-        Index = pageIndex;
-        _mmf = MemoryMappedFile.CreateFromFile(pageFile, FileMode.OpenOrCreate, null, pageSize,
-                                               MemoryMappedFileAccess.ReadWrite);
-    }
+    public long Index { get; } = pageIndex;
 
     public void Dispose()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
+        if (_disposed) return;
+
+        _mmf.Dispose();
+
+        _disposed = true;
     }
 
     public void Delete()
     {
-        Dispose(true);
-        DeleteFile(_pageFile);
+        Dispose();
+
+        DeleteFile(pageFile);
     }
-
-    public Stream GetReadStream(long position, long length)
-    {
-        if (_disposed) throw new ObjectDisposedException(nameof(Page));
-
-        return _mmf.CreateViewStream(position, length, MemoryMappedFileAccess.Read);
-    }
-
-    public Stream GetWriteStream(long position, long length)
-    {
-        if (_disposed) throw new ObjectDisposedException(nameof(Page));
-
-        return _mmf.CreateViewStream(position, length, MemoryMappedFileAccess.Write);
-    }
-
-    public long Index { get; }
 
     public static void DeleteFile(string filePath)
     {
@@ -51,19 +33,17 @@ internal class Page : IPage
             File.Delete(filePath);
     }
 
-    protected void Dispose(bool disposing)
+    public Stream GetReadStream(long position, long length)
     {
-        if (_disposed)
-            return;
+        ObjectDisposedException.ThrowIf(_disposed, this);
 
-        if (disposing)
-            _mmf?.Dispose();
-
-        _disposed = true;
+        return _mmf.CreateViewStream(position, length, MemoryMappedFileAccess.Read);
     }
 
-    ~Page()
+    public Stream GetWriteStream(long position, long length)
     {
-        Dispose(false);
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
+        return _mmf.CreateViewStream(position, length, MemoryMappedFileAccess.Write);
     }
 }

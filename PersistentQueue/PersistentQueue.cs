@@ -1,8 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
-using Nito.AsyncEx;
 using Persistent.Queue.DataObjects;
 using Persistent.Queue.Interfaces;
-using Persistent.Queue.Interfaces.Intern;
 using Persistent.Queue.Utils;
 
 namespace Persistent.Queue;
@@ -10,14 +8,14 @@ namespace Persistent.Queue;
 public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
 {
     // Page factories
-    private readonly IPageFactory _dataPageFactory;
+    private readonly PageFactory _dataPageFactory;
 
     private readonly long _dataPageSize;
     private readonly long _indexItemSize;
-    private readonly IPageFactory _indexPageFactory;
+    private readonly PageFactory _indexPageFactory;
     private readonly object _lockObject = new();
     private readonly long _metaDataItemSize;
-    private readonly IPageFactory _metaPageFactory;
+    private readonly PageFactory _metaPageFactory;
 
     private readonly QueueStateMonitor _queueMonitor;
 
@@ -56,6 +54,8 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
 
         _queueMonitor = QueueStateMonitor.Initialize(_metaData!.TailIndex);
     }
+
+    public bool HasItems => _metaData.TailIndex - _metaData.HeadIndex > 0;
 
     protected PersistentQueueConfiguration Configuration { get; }
 
@@ -165,8 +165,6 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
         }
     }
 
-    public bool HasItems => _metaData.TailIndex - _metaData.HeadIndex > 0;
-
     public QueueStatistics GetStatistics()
     {
         var headIndex = _metaData.HeadIndex;
@@ -184,12 +182,11 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
 
     protected virtual void Dispose(bool disposing)
     {
-        if (disposing)
-        {
-            _metaPageFactory?.Dispose();
-            _indexPageFactory?.Dispose();
-            _dataPageFactory?.Dispose();
-        }
+        if (!disposing) return;
+
+        _metaPageFactory.Dispose();
+        _indexPageFactory.Dispose();
+        _dataPageFactory.Dispose();
     }
 
     private void CommitBatch(ItemRange range)
@@ -306,7 +303,9 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
         var buffer = new byte[indexItem.ItemLength];
         using (var readStream = dataPage.GetReadStream(indexItem.ItemOffset, indexItem.ItemLength))
         {
-            readStream.Read(buffer, 0, (int) indexItem.ItemLength);
+            var bytesRead = readStream.Read(buffer, 0, (int) indexItem.ItemLength);
+            if (bytesRead != indexItem.ItemLength)
+                throw new DataInconsistencyException($"Tried to read item with {indexItem.ItemOffset} bytes, but only received {bytesRead} bytes. Maybe the data file is currupted.");
         }
 
         _dataPageFactory.ReleasePage(dataPage.Index);

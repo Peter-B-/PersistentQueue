@@ -1,10 +1,10 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Text;
 using Persistent.Queue;
 
 namespace TestApp;
 
-internal class Program
+internal sealed class Program
 {
     private static async Task Main(string[] args)
     {

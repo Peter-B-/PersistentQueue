@@ -32,12 +32,7 @@ public class GetOrCreateTests
     }
 }
 
-public class TestItem
+public class TestItem(int id)
 {
-    public TestItem(int id)
-    {
-        Id = id;
-    }
-
-    public int Id { get; }
+    public int Id { get; } = id;
 }

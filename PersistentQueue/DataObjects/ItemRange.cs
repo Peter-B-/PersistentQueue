@@ -1,13 +1,7 @@
-﻿namespace Persistent.Queue.DataObjects;
+namespace Persistent.Queue.DataObjects;
 
-internal readonly struct ItemRange
+internal readonly struct ItemRange(long headIndex, int itemCount)
 {
-    public readonly long HeadIndex;
-    public readonly int ItemCount;
-
-    public ItemRange(long headIndex, int itemCount)
-    {
-        HeadIndex = headIndex;
-        ItemCount = itemCount;
-    }
+    public readonly long HeadIndex = headIndex;
+    public readonly int ItemCount = itemCount;
 }

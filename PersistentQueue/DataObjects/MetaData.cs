@@ -1,6 +1,6 @@
-﻿namespace Persistent.Queue.DataObjects;
+namespace Persistent.Queue.DataObjects;
 
-internal class MetaData
+internal sealed class MetaData
 {
     public long HeadIndex { get; set; }
     public long TailIndex { get; set; }
@@ -24,10 +24,9 @@ internal class MetaData
 
     public void WriteToStream(Stream s)
     {
-        using (var bw = new BinaryWriter(s))
-        {
-            bw.Write(HeadIndex);
-            bw.Write(TailIndex);
-        }
+        using var bw = new BinaryWriter(s);
+
+        bw.Write(HeadIndex);
+        bw.Write(TailIndex);
     }
 }
