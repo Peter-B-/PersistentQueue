@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Persistent.Queue.DataObjects;
 using Persistent.Queue.Interfaces;
-using Persistent.Queue.Interfaces.Intern;
 using Persistent.Queue.Utils;
 
 namespace Persistent.Queue;
@@ -9,14 +8,14 @@ namespace Persistent.Queue;
 public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
 {
     // Page factories
-    private readonly IPageFactory _dataPageFactory;
+    private readonly PageFactory _dataPageFactory;
 
     private readonly long _dataPageSize;
     private readonly long _indexItemSize;
-    private readonly IPageFactory _indexPageFactory;
+    private readonly PageFactory _indexPageFactory;
     private readonly object _lockObject = new();
     private readonly long _metaDataItemSize;
-    private readonly IPageFactory _metaPageFactory;
+    private readonly PageFactory _metaPageFactory;
 
     private readonly QueueStateMonitor _queueMonitor;
 
