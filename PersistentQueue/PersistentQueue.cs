@@ -303,7 +303,9 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
         var buffer = new byte[indexItem.ItemLength];
         using (var readStream = dataPage.GetReadStream(indexItem.ItemOffset, indexItem.ItemLength))
         {
-            readStream.Read(buffer, 0, (int) indexItem.ItemLength);
+            var bytesRead = readStream.Read(buffer, 0, (int) indexItem.ItemLength);
+            if (bytesRead != indexItem.ItemLength)
+                throw new DataInconsistencyException($"Tried to read item with {indexItem.ItemOffset} bytes, but only received {bytesRead} bytes. Maybe the data file is currupted.");
         }
 
         _dataPageFactory.ReleasePage(dataPage.Index);
