@@ -189,7 +189,7 @@ public class Cache<TKey, TValue> : ICache<TKey, TValue> where TKey : notnull
         }
     }
 
-    private class CacheItem(TKey key, TValue value)
+    private sealed class CacheItem(TKey key, TValue value)
     {
         public DateTime LastAccessTimestamp = DateTime.Now;
         public long RefCount;

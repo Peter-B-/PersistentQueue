@@ -182,12 +182,11 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
 
     protected virtual void Dispose(bool disposing)
     {
-        if (disposing)
-        {
-            _metaPageFactory?.Dispose();
-            _indexPageFactory?.Dispose();
-            _dataPageFactory?.Dispose();
-        }
+        if (!disposing) return;
+
+        _metaPageFactory.Dispose();
+        _indexPageFactory.Dispose();
+        _dataPageFactory.Dispose();
     }
 
     private void CommitBatch(ItemRange range)
