@@ -1,11 +1,12 @@
 using Persistent.Queue.Interfaces;
+using System;
 
 namespace Persistent.Queue.DataObjects;
 
-internal sealed class DequeueResult(List<Memory<byte>> data, ItemRange itemRange, Action<ItemRange> commitCallBack, Action<ItemRange> rejectCallBack)
+internal sealed class DequeueResult(IReadOnlyList<ReadOnlyMemory<byte>> data, ItemRange itemRange, Action<ItemRange> commitCallBack, Action<ItemRange> rejectCallBack)
     : IDequeueResult
 {
-    public IReadOnlyList<Memory<byte>> Items { get; } = data;
+    public IReadOnlyList<ReadOnlyMemory<byte>> Items { get; } = data;
 
     public void Commit()
     {

@@ -293,7 +293,7 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
         _metaPageFactory.ReleasePage(0);
     }
 
-    private Memory<byte> Readitem(IndexItem indexItem)
+    private ReadOnlyMemory<byte> Readitem(IndexItem indexItem)
     {
         // Get data page
         var dataPage = _dataPageFactory.GetPage(indexItem.DataPageIndex);
@@ -313,7 +313,7 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
         return buffer;
     }
 
-    private Memory<byte> ReadItem(long itemIndex)
+    private ReadOnlyMemory<byte> ReadItem(long itemIndex)
     {
         // Get index item for head index
         var indexItem = GetIndexItem(itemIndex);
@@ -321,7 +321,7 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
         return Readitem(indexItem);
     }
 
-    private bool ReadItemIfSmallerThan(long itemIndex, long sizeLimit, [NotNullWhen(true)] out Memory<byte>? item)
+    private bool ReadItemIfSmallerThan(long itemIndex, long sizeLimit, [NotNullWhen(true)] out ReadOnlyMemory<byte>? item)
     {
         // Get index item for head index
         var indexItem = GetIndexItem(itemIndex);
@@ -338,7 +338,7 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
         }
     }
 
-    private List<Memory<byte>> ReadItems(long headIndex, int noOfItems)
+    private List<ReadOnlyMemory<byte>> ReadItems(long headIndex, int noOfItems)
     {
         return
             Enumerable.Range(0, noOfItems)
@@ -347,9 +347,9 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
                 .ToList();
     }
 
-    private List<Memory<byte>> ReadItemsWithSizeLimit(long headIndex, int noOfItems, long maxSize)
+    private IReadOnlyList<ReadOnlyMemory<byte>> ReadItemsWithSizeLimit(long headIndex, int noOfItems, long maxSize)
     {
-        var data = new List<Memory<byte>>(noOfItems);
+        var data = new List<ReadOnlyMemory<byte>>(noOfItems);
 
         var firstItem = ReadItem(headIndex);
         data.Add(firstItem);
@@ -373,7 +373,9 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
         return data;
     }
 
-    private void RejectBatch(ItemRange range)
+    private static void RejectBatch(ItemRange range)
     {
+        // This hook is intended for the future.
+        // For now, there is nothing to do when rejecting a batch. Just don't commit the read.
     }
 }
