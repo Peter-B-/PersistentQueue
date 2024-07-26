@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using Shouldly;
 
 namespace PersistentQueue.Tests.PersistentQueueTests.Dequeue;
