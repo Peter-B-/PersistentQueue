@@ -1,8 +1,8 @@
-﻿namespace Persistent.Queue.Utils;
+namespace Persistent.Queue.Utils;
 
 public sealed class QueueState : IQueueState
 {
-    private readonly TaskCompletionSource<IQueueState> _updateTcs = new TaskCompletionSource<IQueueState>();
+    private readonly TaskCompletionSource<IQueueState> _updateTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     public QueueState(long tailIndex)
     {
