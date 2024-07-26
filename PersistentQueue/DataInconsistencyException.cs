@@ -1,6 +1,6 @@
 namespace Persistent.Queue;
 
-public class DataInconsistencyException:Exception
+public class DataInconsistencyException : Exception
 {
     public DataInconsistencyException(string? message) : base(message)
     {
