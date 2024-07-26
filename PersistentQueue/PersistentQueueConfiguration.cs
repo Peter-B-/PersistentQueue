@@ -3,22 +3,16 @@ using JetBrains.Annotations;
 namespace Persistent.Queue;
 
 [NoReorder]
-public class PersistentQueueConfiguration
+public class PersistentQueueConfiguration(string queuePath, long? dataPageSize = null)
 {
-    public PersistentQueueConfiguration(string queuePath, long? dataPageSize = null)
-    {
-        QueuePath = queuePath;
-        DataPageSize = dataPageSize ?? DefaultDataPageSize;
-    }
-
-    public string QueuePath { get; }
+    public string QueuePath { get; } = queuePath;
     public string MetaPageFolder { get; set; } = "meta";
     public string IndexPageFolder { get; set; } = "index";
     public string DataPageFolder { get; set; } = "data";
 
     // Index pages
     public long IndexItemsPerPage { get; set; } = 50000;
-    public long DataPageSize { get; set; }
+    public long DataPageSize { get; set; } = dataPageSize ?? DefaultDataPageSize;
 
     public static long DefaultDataPageSize { get; } = 128 * 1024 * 1024;
 

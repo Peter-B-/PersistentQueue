@@ -6,6 +6,13 @@ namespace PersistentQueue.Tests.PersistentQueueTests.Enqueue;
 [TestFixture]
 public class TaskBehaviour
 {
+    private static async Task<int> GetThreadIdAfterDequeue(UnitTestPersistentQueue queue)
+    {
+        var res = await queue.DequeueAsync(1, 10);
+        res.Commit();
+        return Environment.CurrentManagedThreadId;
+    }
+
     [Test]
     public async Task DequeueMustNotContinueOnEnqueueThread()
     {
@@ -23,12 +30,5 @@ public class TaskBehaviour
 
         //Assert
         dequeueThread.ShouldNotBe(enqueueThread);
-    }
-
-    private static async Task<int> GetThreadIdAfterDequeue(UnitTestPersistentQueue queue)
-    {
-        var res = await queue.DequeueAsync(1, 10);
-        res.Commit();
-        return Environment.CurrentManagedThreadId;
     }
 }

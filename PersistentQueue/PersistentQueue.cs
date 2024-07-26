@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using Nito.AsyncEx;
 using Persistent.Queue.DataObjects;
 using Persistent.Queue.Interfaces;
 using Persistent.Queue.Interfaces.Intern;
@@ -56,6 +55,8 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
 
         _queueMonitor = QueueStateMonitor.Initialize(_metaData!.TailIndex);
     }
+
+    public bool HasItems => _metaData.TailIndex - _metaData.HeadIndex > 0;
 
     protected PersistentQueueConfiguration Configuration { get; }
 
@@ -164,8 +165,6 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
             PersistMetaData();
         }
     }
-
-    public bool HasItems => _metaData.TailIndex - _metaData.HeadIndex > 0;
 
     public QueueStatistics GetStatistics()
     {

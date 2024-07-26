@@ -3,19 +3,14 @@ using Persistent.Queue.Interfaces.Intern;
 
 namespace Persistent.Queue.Utils;
 
-internal class Page : IPage
+internal class Page(string pageFile, long pageSize, long pageIndex) : IPage
 {
-    private readonly MemoryMappedFile _mmf;
-    private readonly string _pageFile;
+    private readonly MemoryMappedFile _mmf = MemoryMappedFile.CreateFromFile(pageFile, FileMode.OpenOrCreate, null, pageSize,
+                                                                             MemoryMappedFileAccess.ReadWrite);
+
     private bool _disposed;
 
-    public Page(string pageFile, long pageSize, long pageIndex)
-    {
-        _pageFile = pageFile;
-        Index = pageIndex;
-        _mmf = MemoryMappedFile.CreateFromFile(pageFile, FileMode.OpenOrCreate, null, pageSize,
-                                               MemoryMappedFileAccess.ReadWrite);
-    }
+    public long Index { get; } = pageIndex;
 
     public void Dispose()
     {
@@ -26,7 +21,7 @@ internal class Page : IPage
     public void Delete()
     {
         Dispose(true);
-        DeleteFile(_pageFile);
+        DeleteFile(pageFile);
     }
 
     public Stream GetReadStream(long position, long length)
@@ -42,8 +37,6 @@ internal class Page : IPage
 
         return _mmf.CreateViewStream(position, length, MemoryMappedFileAccess.Write);
     }
-
-    public long Index { get; }
 
     public static void DeleteFile(string filePath)
     {
