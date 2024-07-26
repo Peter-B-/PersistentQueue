@@ -4,18 +4,21 @@
     <RootNamespace>Persistent.Queue</RootNamespace>
 
     <!-- Nuget -->
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.1.1</Version>
     <Authors>Peter-B-</Authors>
     <Description>A queue, persisted in local files, that can be consumed in batches. Intended as a local buffer for IoT devices.</Description>
     <PackageProjectUrl>https://github.com/Peter-B-/PersistentQueue</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Peter-B-/PersistentQueue</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
 
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+
     <!-- Source Link integration -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
   </PropertyGroup>
 
   <ItemGroup>
