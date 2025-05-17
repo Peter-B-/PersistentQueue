@@ -14,7 +14,7 @@ public class TaskBehaviour
     }
 
     [Test]
-    public async Task DequeueMustNotContinueOnEnqueueThread()
+    public static async Task DequeueMustNotContinueOnEnqueueThread()
     {
         //Arrange
         using var queue = new UnitTestPersistentQueue();

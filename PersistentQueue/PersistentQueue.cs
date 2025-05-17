@@ -344,7 +344,7 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
                 .ToList();
     }
 
-    private IReadOnlyList<ReadOnlyMemory<byte>> ReadItemsWithSizeLimit(long headIndex, int noOfItems, long maxSize)
+    private List<ReadOnlyMemory<byte>> ReadItemsWithSizeLimit(long headIndex, int noOfItems, long maxSize)
     {
         var data = new List<ReadOnlyMemory<byte>>(noOfItems);
 
