@@ -99,10 +99,6 @@ public class PersistentQueue : IPersistentQueue, IPersistentQueueStatisticSource
 
     public void Enqueue(ReadOnlySpan<byte> itemData)
     {
-        // Throw or silently return if itemData is null?
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-        if (itemData == null) return;
-
         if (itemData.Length > _dataPageSize)
             throw new ArgumentOutOfRangeException(nameof(itemData),
                                                   "Item data length is greater than queue data page size");
