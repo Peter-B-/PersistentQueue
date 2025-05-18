@@ -1,11 +1,12 @@
 # PersistentQueue
 
-![.NET Core](https://github.com/Peter-B-/PersistentQueue/workflows/.NET%20Core/badge.svg)
 ![Nuget](https://img.shields.io/nuget/v/PersistentQueue)
 
 This project provides a queue that is persisted on the local file system. It is intended as a local buffer for messages on IoT devices.
 
-The items are persisted in [memory mapped files](https://docs.microsoft.com/en-us/dotnet/standard/io/memory-mapped-files).
+The items are persisted in [memory mapped files](https://docs.microsoft.com/en-us/dotnet/standard/io/memory-mapped-files) accross application
+and system restarts. Items are dequeued in batches and must be confirmed, before they are removed from the queue. Thereby it is
+ensured that only items successfully sent to a downstream service, usually some kind of message bus, are removed from the queue.
 
 ## Getting started
 
