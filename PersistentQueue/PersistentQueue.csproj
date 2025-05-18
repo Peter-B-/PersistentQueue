@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <RootNamespace>Persistent.Queue</RootNamespace>
@@ -10,10 +10,15 @@
     <RepositoryUrl>https://github.com/Peter-B-/PersistentQueue</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
 
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
+    
+    
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
+
+    
     <!-- Source Link integration -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
@@ -27,4 +32,7 @@
     <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" PrivateAssets="All" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\readme.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
 </Project>
