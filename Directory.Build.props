@@ -2,7 +2,7 @@
 
 <Project>
   <PropertyGroup>
-    <TargetFramework>net8</TargetFramework>
+    <TargetFrameworks>net8;net9</TargetFrameworks>
     <LangVersion>12.0</LangVersion>
     <AnalysisLevel>latest-Recommended</AnalysisLevel>
     <Nullable>enable</Nullable>
