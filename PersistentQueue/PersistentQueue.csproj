@@ -11,19 +11,17 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
 
     <PackageReadmeFile>readme.md</PackageReadmeFile>
-    
-    
+
+    <PackageTags>linqpad-samples</PackageTags>
+
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
-
-    
     <!-- Source Link integration -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,5 +32,12 @@
 
   <ItemGroup>
     <None Include="..\readme.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="../Examples/**/*.*">
+      <Pack>true</Pack>
+      <PackagePath>linqpad-samples\;content</PackagePath>
+    </Content>
   </ItemGroup>
 </Project>
